@@ -1,0 +1,136 @@
+---
+title: "initialEDA"
+output: html_document
+date: "2022-10-19"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+brainData <- data.frame(read.csv("dataset.csv"))
+head(brainData)
+str(brainData)
+```
+
+Converting categorical variables as factor
+```{r}
+#gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke
+brainData$gender = factor(brainData$gender)
+brainData$hypertension = factor(brainData$hypertension)
+brainData$heart_disease = factor(brainData$heart_disease)
+brainData$ever_married = factor(brainData$ever_married)
+brainData$work_type = factor(brainData$work_type)
+brainData$Residence_type = factor(brainData$Residence_type)
+brainData$smoking_status = factor(brainData$smoking_status)
+brainData$stroke = factor(brainData$stroke)
+str(brainData)
+```
+```{r results='asis'}
+
+
+```
+
+```{r results='asis'}
+#install.packages("corrplot")
+#library(corrplot)
+#corrplot
+#head(bike_final)
+#
+#colnames(bike)[4:11] = c("Day","Workday","Weather","TempF","TempFF","Humidity","Wind","Tusers") 
+corr_brain <- brainData[c('age','avg_glucose_level','bmi')] 
+#corr_brain$bmi =as.integer(corr_brain$bmi)
+head(corr_brain)
+#corr_bike$TempFF =as.integer(corr_bike$TempFF)
+#head(corr_bike)
+library("corrplot")
+cor_mat <- cor(corr_brain)
+corrplot(cor_mat,method="number")
+pairs(brainData)
+```
+
+```{r results='asis'}
+library(ggplot2)
+ggplot(brainData, aes(y=avg_glucose_level, x=stroke)) + 
+  geom_boxplot() + 
+  geom_boxplot( colour="orange", fill="#7777cc", outlier.colour="red", outlier.shape=4, outlier.size=2) +
+  labs(title="outlier in avg glucose level  not due to stroke`", x="", y = "avg glucose level")
+
+ggplot(brainData, aes(y=bmi, x=stroke)) + 
+  geom_boxplot() + 
+  geom_boxplot( colour="orange", fill="#7777cc", outlier.colour="red", outlier.shape=4, outlier.size=2) +
+  labs(title="outlier in bmi  not due to stroke`", x="", y = "bmi")
+
+
+```
+**avg glucose level of people with stroke is higher than the max of people without stroke**
+
+```{r results='asis'}
+ggplot(data=brainData, aes(bmi)) + 
+  geom_histogram(breaks=seq(66, 86, by = 1), 
+                 col="red", 
+                 fill="blue", 
+                 alpha = .7) + # opacity
+  labs(x="bmi", y="Frequency") +
+  labs(title="bmi histogram using `ggplot`") 
+
+
+ggplot(data=brainData, aes(age)) + 
+  geom_histogram(breaks=seq(66, 86, by = 1), 
+                 col="red", 
+                 fill="blue", 
+                 alpha = .7) + # opacity
+  labs(x="age", y="Frequency") +
+  labs(title="bmi age using `ggplot`") 
+
+
+
+```
+
+
+```{r results='asis'}
+#bmi
+ggplot(data = brainData, mapping = aes(x = work_type, y = bmi)) +
+  geom_boxplot()
+
+
+ggplot(data = brainData, mapping = aes(x = Residence_type, y = bmi)) +
+  geom_boxplot()
+
+ggplot(data = brainData, mapping = aes(x = ever_married, y = bmi)) +
+  geom_boxplot()
+
+ggplot(data = brainData, mapping = aes(x = smoking_status, y = bmi)) +
+  geom_boxplot()
+
+ggplot(data = brainData, mapping = aes(x = hypertension, y = bmi)) +
+  geom_boxplot()
+
+
+```
+
+```{r results='asis'}
+#avg_glucose_level
+ggplot(data = brainData, mapping = aes(x = work_type, y = avg_glucose_level)) +
+  geom_boxplot()
+
+
+ggplot(data = brainData, mapping = aes(x = Residence_type, y = avg_glucose_level)) +
+  geom_boxplot()
+
+ggplot(data = brainData, mapping = aes(x = ever_married, y = avg_glucose_level)) +
+  geom_boxplot()
+
+ggplot(data = brainData, mapping = aes(x = smoking_status, y = avg_glucose_level)) +
+  geom_boxplot()
+#hypertension high => high avg bloood sugar
+ggplot(data = brainData, mapping = aes(x = hypertension, y = avg_glucose_level)) +
+  geom_boxplot()
+
+
+```
+
+
