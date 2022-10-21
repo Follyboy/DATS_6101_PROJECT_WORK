@@ -11,7 +11,10 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r}
-brainData <- data.frame(read.csv("dataset.csv"))
+data <- data.frame(read.csv("dataset.csv"))
+
+# Extracting the variables we need from the data set
+brainData <- select(data, -c('id'))
 head(brainData)
 str(brainData)
 ```
@@ -35,17 +38,8 @@ str(brainData)
 ```
 
 ```{r results='asis'}
-#install.packages("corrplot")
-#library(corrplot)
-#corrplot
-#head(bike_final)
-#
-#colnames(bike)[4:11] = c("Day","Workday","Weather","TempF","TempFF","Humidity","Wind","Tusers") 
-corr_brain <- brainData[c('age','avg_glucose_level','bmi')] 
-#corr_brain$bmi =as.integer(corr_brain$bmi)
+corr_brain <- select_if(brainData, is.numeric)
 head(corr_brain)
-#corr_bike$TempFF =as.integer(corr_bike$TempFF)
-#head(corr_bike)
 library("corrplot")
 cor_mat <- cor(corr_brain)
 corrplot(cor_mat,method="number")
