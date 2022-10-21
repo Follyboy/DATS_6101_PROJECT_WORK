@@ -124,7 +124,17 @@ ggplot(data = brainData, mapping = aes(x = smoking_status, y = avg_glucose_level
 ggplot(data = brainData, mapping = aes(x = hypertension, y = avg_glucose_level)) +
   geom_boxplot()
 
-
 ```
 
+```{r, results='markup'}
+qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
+qqline(brainData$age)
+
+qqnorm(brainData$bmi, main="Q-Q plot of bmi", col="blue", ylab="bmi quantiles")
+qqline(brainData$bmi)
+
+qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="blue", ylab="avg_glucose_level quantiles")
+qqline(brainData$avg_glucose_level)
+
+```
 
