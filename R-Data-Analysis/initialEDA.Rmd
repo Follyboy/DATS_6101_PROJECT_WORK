@@ -32,12 +32,12 @@ brainData$smoking_status = factor(brainData$smoking_status)
 brainData$stroke = factor(brainData$stroke)
 str(brainData)
 ```
-```{r results='asis'}
+```{r results='markup'}
 
 
 ```
 
-```{r results='asis'}
+```{r results='markup'}
 corr_brain <- select_if(brainData, is.numeric)
 head(corr_brain)
 library("corrplot")
@@ -46,7 +46,7 @@ corrplot(cor_mat,method="number")
 pairs(brainData)
 ```
 
-```{r results='asis'}
+```{r results='markup'}
 library(ggplot2)
 ggplot(brainData, aes(y=avg_glucose_level, x=stroke)) + 
   geom_boxplot() + 
@@ -62,7 +62,7 @@ ggplot(brainData, aes(y=bmi, x=stroke)) +
 ```
 **avg glucose level of people with stroke is higher than the max of people without stroke**
 
-```{r results='asis'}
+```{r results='markup'}
 ggplot(data=brainData, aes(bmi)) + 
   geom_histogram(breaks=seq(66, 86, by = 1), 
                  col="red", 
@@ -85,7 +85,7 @@ ggplot(data=brainData, aes(age)) +
 ```
 
 
-```{r results='asis'}
+```{r results='markup'}
 #bmi
 ggplot(data = brainData, mapping = aes(x = work_type, y = bmi)) +
   geom_boxplot()
@@ -106,7 +106,7 @@ ggplot(data = brainData, mapping = aes(x = hypertension, y = bmi)) +
 
 ```
 
-```{r results='asis'}
+```{r results='markup'}
 #avg_glucose_level
 ggplot(data = brainData, mapping = aes(x = work_type, y = avg_glucose_level)) +
   geom_boxplot()
