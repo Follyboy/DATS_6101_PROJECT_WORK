@@ -15,6 +15,7 @@ data <- data.frame(read.csv("dataset.csv"))
 
 # Extracting the variables we need from the data set
 brainData <- select(data, -c('id'))
+brainData[brainData == ''] <- NA
 head(brainData)
 str(brainData)
 ```
@@ -32,9 +33,23 @@ brainData$smoking_status = factor(brainData$smoking_status)
 brainData$stroke = factor(brainData$stroke)
 str(brainData)
 ```
+
 ```{r results='markup'}
-
-
+stroke_subset1 <- select(brainData, c('gender', 'age', 'work_type', 'smoking_status', 'stroke'))
+stroke_subset1
+no_na_for_smoking_status <- subset(stroke_subset1, !is.na(smoking_status))
+no_na_for_smoking_status
+ggplot(no_na_for_smoking_status, aes(age, smoking_status, colour = gender)) + 
+  geom_point() + 
+  ggtitle("Distribution for age against smoking_status")
+qqnorm(no_na_for_smoking_status$age, main = "Test", col = "red")
+qqline(no_na_for_smoking_status$age)
+na_for_smoking <- subset(stroke_subset1, is.na(smoking_status))
+na_for_smoking
+people_that_had_stroke <- subset(stroke_subset1, stroke == 1)
+people_that_had_stroke
+people_that_did_not_have_stroke <- subset(stroke_subset1, stroke == 0)
+people_that_did_not_have_stroke
 ```
 
 ```{r results='markup'}
@@ -57,8 +72,6 @@ ggplot(brainData, aes(y=bmi, x=stroke)) +
   geom_boxplot() + 
   geom_boxplot( colour="orange", fill="#7777cc", outlier.colour="red", outlier.shape=4, outlier.size=2) +
   labs(title="outlier in bmi  not due to stroke`", x="", y = "bmi")
-
-
 ```
 **avg glucose level of people with stroke is higher than the max of people without stroke**
 
@@ -124,17 +137,15 @@ ggplot(data = brainData, mapping = aes(x = smoking_status, y = avg_glucose_level
 ggplot(data = brainData, mapping = aes(x = hypertension, y = avg_glucose_level)) +
   geom_boxplot()
 
+
 ```
 
 ```{r, results='markup'}
 qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
 qqline(brainData$age)
-
 qqnorm(brainData$bmi, main="Q-Q plot of bmi", col="blue", ylab="bmi quantiles")
 qqline(brainData$bmi)
-
 qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="blue", ylab="avg_glucose_level quantiles")
 qqline(brainData$avg_glucose_level)
-
 ```
 
