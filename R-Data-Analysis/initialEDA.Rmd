@@ -35,15 +35,15 @@ str(brainData)
 ```
 ```{r results='markup'}
 
-
 ```
 
 ```{r results='markup'}
+brainData$bmi[is.na(brainData$bmi)] <- median(brainData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
 corr_brain <- select_if(brainData, is.numeric)
 head(corr_brain)
 library("corrplot")
 cor_mat <- cor(corr_brain)
-#corrplot(cor_mat,method="number")
+corrplot(cor_mat,method="number")
 #pairs(brainData)
 ```
 
@@ -181,4 +181,206 @@ If the skewness is less than -1 or greater than 1, the data are highly skewed
 ```{r, results='markup'}
 brainData$bmi[is.na(brainData$bmi)] <- median(brainData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
 summary(brainData)
+```
+
+correlation plot for Numeric Variables :
+
+```{r results='markup'}
+corr_brain <- select_if(brainData, is.numeric)
+head(corr_brain)
+library("corrplot")
+cor_mat <- cor(corr_brain)
+corrplot(cor_mat,method="number")
+
+```
+
+Correlation plot for Factor variables
+```{r results='markup'}
+library(tidyverse)
+df_character <- select_if(brainData, is.factor)
+head(df_character)
+#plot_correlation(df_character)
+#M = cor(corr_brain)
+#corrplot(M, method = 'number') # colorful number
+#plot_c
+```
+
+
+
+
+
+**Data Analysis for average glucose level**
+```{r results='markup'}
+get_box_stats <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+
+ggplot(brainData, aes(x = stroke, y = avg_glucose_level, fill = stroke)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+```
+```{r results='markup'}
+get_box_stats_smoking <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+
+ggplot(brainData, aes(x = smoking_status, y = avg_glucose_level, fill = stroke)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71","#2ecc71")) +
+  stat_summary(fun.data = get_box_stats_smoking, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+
+# Basic Scatterplot Matrix
+pairs(~avg_glucose_level+bmi+age,data=brainData,
+   main="Simple Scatterplot Matrix")
+
+```
+```{r results='markup'}
+# plot the distribution of salaries 
+# by rank using kernel density plots
+ggplot(brainData, 
+       aes(x = avg_glucose_level, 
+           fill = stroke)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "avg glucose level distribution by rank")
+
+ggplot(brainData, 
+       aes(x = avg_glucose_level, 
+           fill = smoking_status)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "avg glucose level distribution by rank")
+ggplot(brainData, 
+       aes(x = avg_glucose_level, 
+           fill = Residence_type)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "avg glucose level distribution by rank")
+```
+
+
+```{r results='markup'}
+library(ggcorrplot)
+model.matrix(~0+., data=brainData) %>% 
+  cor(use="pairwise.complete.obs") %>% 
+  ggcorrplot(show.diag = F, type="lower", lab=TRUE, lab_size=2)
+
+```
+
+
+checking smoking status
+Based on the correlation matrix, 
+smoked is closely related to age, work_type=private
+Never Smoke closely related to age, ever_married =yes,private, bmi
+fSMOKE bmi, married=yes, age
+
+```{r results='markup'}
+smoked_private_yes_dataset <- subset(brainData, work_type=="Private" & ever_married=="Yes" )
+smoked_private_no_dataset <- subset(brainData, work_type=="Private" & ever_married=="No" )
+ggplot(smoked_private_yes_dataset, 
+       aes(x = age, 
+           fill =smoking_status )) +
+  geom_density(alpha = 0.4) +
+  labs(title = "age and smoking status evrmarried=yes ")
+ggplot(smoked_private_no_dataset, 
+       aes(x = age, 
+           fill =smoking_status )) +
+  geom_density(alpha = 0.4) +
+  labs(title = "age and smoking status evrmarried=no ") #age <25 => formerly smokes 
+#30-40 : smokes
+#40-80 : formerly smokes
+#could be marked as formerly smokes
+```
+
+```{r results='markup'}
+library(ggplot2)
+#data(Salaries, package="carData")
+
+# plot experience vs. salary 
+# (color represents rank and size represents service)
+ggplot(brainData, 
+       aes(x = bmi, 
+           y = age, 
+           size = ever_married, 
+           color = smoking_status)) +
+  geom_point(alpha = .6) +
+  labs(title = "Academic salary by rank, years of service, and years since degree")
+```
+
+
+```{r results='markup'}
+missing_smoke <- subset(brainData, smoking_status=="" & age < 10)
+less_30 <- subset(brainData, age < 30)
+missing_smoke
+ggplot(brainData, 
+       aes(x = age, 
+           fill = smoking_status)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "avg glucose level distribution by rank")
+
+ggplot(less_30, 
+       aes(x = age, 
+           fill = smoking_status)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "avg glucose level distribution by rank")
+```
+
+
+```{r results='markup'}
+
+
+get_box_stats_ <- function(y, upper_limit = max(brainData$age) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+
+ggplot(brainData, aes(x = smoking_status, y = age, fill = work_type)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "black", "blue","green","yellow")) +
+  stat_summary(fun.data = get_box_stats_, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+ggplot(brainData, aes(x = smoking_status, y = age, fill = ever_married)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "black", "blue","green","yellow")) +
+  #stat_summary(fun.data = get_box_stats_, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+
+ggplot(brainData, aes(x = smoking_status, y = avg_glucose_level, fill = work_type)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "black", "blue","green","yellow")) +
+  #stat_summary(fun.data = get_box_stats_, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+ggplot(brainData, aes(x = smoking_status, y = avg_glucose_level, fill = ever_married)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "black", "blue","green","yellow")) +
+  #stat_summary(fun.data = get_box_stats_, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+
 ```
