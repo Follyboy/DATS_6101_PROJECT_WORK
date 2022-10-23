@@ -11,6 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 ## R Markdown
 
 ```{r}
+library(tidyverse)
 data <- data.frame(read.csv("dataset.csv"))
 
 # Extracting the variables we need from the data set
@@ -57,8 +58,8 @@ corr_brain <- select_if(brainData, is.numeric)
 head(corr_brain)
 library("corrplot")
 cor_mat <- cor(corr_brain)
-corrplot(cor_mat,method="number")
-pairs(brainData)
+#corrplot(cor_mat,method="number")
+#pairs(brainData)
 ```
 
 ```{r results='markup'}
@@ -148,4 +149,47 @@ qqline(brainData$bmi)
 qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="blue", ylab="avg_glucose_level quantiles")
 qqline(brainData$avg_glucose_level)
 ```
+```{r, results='markup'}
+summary(brainData)
+```
+Number of NA values in bmi: 1462\
+Number of NA values in smoking_status: 13292\
+```{r, results='markup'}
+library(ggplot2)
+ggplot(data=brainData, aes(bmi)) +
+geom_histogram(col="black",
+fill="blue") +
+labs(x="bmi", y="frequency") +
+labs(title="plot of bmi")
+```
+```{r, results='markup'}
+tempdf <- subset(brainData, !is.na(bmi))  # removing NA values from bmi and storing it in tempdf
+density_bmi <- density(tempdf$bmi)
+plot(density_bmi)
 
+ggplot(data = tempdf, mapping = aes(y = bmi)) +
+  geom_boxplot() + geom_boxplot( colour="black", fill="#7777cc", outlier.colour="red", outlier.shape=8, outlier.size=2)
+
+```
+From the boxplot, we can see that there are multiple outliers.
+```{r, results='markup'}
+#install.packages("moments")
+library(moments)
+
+skewness(tempdf$bmi)
+```
+From the density curve and skewness value, BMI is rightly skewed. So mean is not the right central tendency to fill NA values in BMI.
+We will NA values in BMI using median of the data.
+Note: Negative skewness value indicates left skewed and positive skewness value indicates right skewed.
+The rule of thumb seems to be:
+
+If the skewness is between -0.5 and 0.5, the data are fairly symmetrical
+If the skewness is between -1 and – 0.5 or between 0.5 and 1, the data are moderately skewed
+If the skewness is less than -1 or greater than 1, the data are highly skewed
+
+
+
+```{r, results='markup'}
+brainData$bmi[is.na(brainData$bmi)] <- median(brainData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
+summary(brainData)
+```
