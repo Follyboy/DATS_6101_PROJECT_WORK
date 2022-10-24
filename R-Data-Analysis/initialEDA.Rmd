@@ -386,6 +386,7 @@ ggplot(brainData, aes(x = smoking_status, y = avg_glucose_level, fill = ever_mar
 
 **Data Analysis for Smoking Status**
 ```{r results='markup'}
+brainData[brainData == ''] <- NA
 no_na_for_smoking_status <- subset(brainData, !is.na(smoking_status))
 no_na_for_smoking_status
 select_smoke <- select(no_na_for_smoking_status, c('smoking_status','stroke'))
