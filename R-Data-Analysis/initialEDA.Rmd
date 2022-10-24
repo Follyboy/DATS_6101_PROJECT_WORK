@@ -345,8 +345,6 @@ ggplot(less_30,
 
 
 ```{r results='markup'}
-
-
 get_box_stats_ <- function(y, upper_limit = max(brainData$age) * 1.15) {
   return(data.frame(
     y = 0.95 * upper_limit,
@@ -400,6 +398,5 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
   ggtitle("Distribution for smoking_status on stroke")
 
 ```
-
 
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that 
