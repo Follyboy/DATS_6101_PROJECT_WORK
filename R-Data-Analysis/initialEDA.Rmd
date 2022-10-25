@@ -384,3 +384,42 @@ ggplot(brainData, aes(x = smoking_status, y = avg_glucose_level, fill = ever_mar
 
 
 ```
+
+```{r results='markup'}
+#install.packages("DataExplorer")
+#library(DataExplorer)
+#checking the unknown value in smoking_status
+plot_bar(brainData$smoking_status)
+
+#age continuous to discrete 
+#0-14 
+#15-44
+#45-64
+# >64
+brainData$ageGroup=cut(brainData$age, c(0, 14, 44, 64, Inf), c("0-14", "15-44", "45-64", ">64"), include.lowest=TRUE)
+#brainData$ageGroup
+
+#plot_bar(brainData$ageGroup,by =brainData$smoking_status)
+#install.packages("ggstatsplot)
+library(ggstatsplot)
+ggbarstats(data=brainData,x=ageGroup,y=smoking_status,label="both")
+#maximum are in category of 0-14 so will fill the entries with never smokes 
+
+```
+
+
+```{r results='markup'}
+#brainData$glucoseGroup=cut(brainData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+#0-114 : Normal glucose level
+#114-140 : Prediabetes
+#140- infinity : Diabetes 
+ggbarstats(data=brainData,x=glucoseGroup,y=ageGroup,label="both")
+ggbarstats(data=brainData,x=glucoseGroup,y=smoking_status,label="both")
+
+
+#glucoseGroup to stroke relations
+ggbarstats(data=brainData,y=glucoseGroup,x=stroke,label="both")
+#people with diabetes have a high chance of getting stroke 
+
+
+```
