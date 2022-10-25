@@ -400,7 +400,7 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
 ```
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that 
 
-```
+
 
 ```{r results='markup'}
 #install.packages("DataExplorer")
@@ -437,6 +437,7 @@ ggbarstats(data=brainData,x=glucoseGroup,y=smoking_status,label="both")
 #glucoseGroup to stroke relations
 ggbarstats(data=brainData,y=glucoseGroup,x=stroke,label="both")
 #people with diabetes have a high chance of getting stroke 
+
 
 
 ```
