@@ -400,11 +400,10 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
 ```
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that 
 
-```
 
-```{r results='markup'}
+```{r, results='markup'}
 #install.packages("DataExplorer")
-#library(DataExplorer)
+library(DataExplorer)
 #checking the unknown value in smoking_status
 plot_bar(brainData$smoking_status)
 
@@ -417,7 +416,7 @@ brainData$ageGroup=cut(brainData$age, c(0, 14, 44, 64, Inf), c("0-14", "15-44", 
 #brainData$ageGroup
 
 #plot_bar(brainData$ageGroup,by =brainData$smoking_status)
-#install.packages("ggstatsplot)
+#install.packages("ggstatsplot")
 library(ggstatsplot)
 ggbarstats(data=brainData,x=ageGroup,y=smoking_status,label="both")
 #maximum are in category of 0-14 so will fill the entries with never smokes 
@@ -426,7 +425,7 @@ ggbarstats(data=brainData,x=ageGroup,y=smoking_status,label="both")
 
 
 ```{r results='markup'}
-#brainData$glucoseGroup=cut(brainData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+brainData$glucoseGroup=cut(brainData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
 #0-114 : Normal glucose level
 #114-140 : Prediabetes
 #140- infinity : Diabetes 
@@ -438,6 +437,20 @@ ggbarstats(data=brainData,x=glucoseGroup,y=smoking_status,label="both")
 ggbarstats(data=brainData,y=glucoseGroup,x=stroke,label="both")
 #people with diabetes have a high chance of getting stroke 
 
-
 ```
+
+
+```{r results='markup'}
+brainData$bmiGroup=cut(brainData$bmi, c(0, 18.5, 24.9, 29.9,Inf), c("Underweight", "Healthy", "Overweight","Obese"), include.lowest=TRUE)
+
+#If your BMI is less than 18.5, it falls within the underweight range.
+#If your BMI is 18.5 to 24.9, it falls within the normal or Healthy Weight range.
+#If your BMI is 25.0 to 29.9, it falls within the overweight range.
+#If your BMI is 30.0 or higher, it falls within the obese range.
+
+str(brainData)
+
+ggbarstats(data=brainData,y=bmiGroup,x=stroke,label="both")
+```
+
 
