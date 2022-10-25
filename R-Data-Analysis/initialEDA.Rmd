@@ -398,7 +398,7 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
   ggtitle("Distribution for smoking_status on stroke")
 
 ```
-After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that 
+After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 45 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
 
 
 ```{r, results='markup'}
