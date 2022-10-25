@@ -401,7 +401,6 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does indeed have an effect on stroke. According to the graph, we see that 
 
 
-
 ```{r results='markup'}
 #install.packages("DataExplorer")
 #library(DataExplorer)
