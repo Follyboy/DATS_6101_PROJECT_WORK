@@ -736,3 +736,18 @@ ggplot(heart_disease_positive, mapping = aes(x=age, y=n)) +
 ```
  
 * From the plots above we see that heart disease does not really have a strong impact on stroke unlike age which has a big factor on stroke. We then see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
+
+
+
+
+```{r, results='markup'}
+install.packages("caret") #for upsample function we need this library
+# after installing this library, I faced an error with rlang version. So simply uninstall rlang and reinstall
+# remove.packages("rlang")
+#install.packages("rlang")
+
+up_sample_data = upSample(x=data_no_outlier[,-11], y=data_no_outlier$stroke)
+
+table(up_sample_data$Class)  # by default the name of dependent variable is changed to class.
+
+```
