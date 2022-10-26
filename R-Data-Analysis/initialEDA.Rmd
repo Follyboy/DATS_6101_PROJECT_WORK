@@ -526,7 +526,9 @@ plot_qq(brainData, by = "stroke")
 plot_qq(data_no_outlier, by = "stroke")
 
 #Shapiro-Wilk Normality test.
-install.packages("ggpubr")
+
+#install.packages("ggpubr")
+
 library(ggpubr)
 #ggqqplot(brainData, "avg_glucose_level", facet.by = "stroke")
 ggqqplot(brainData, "avg_glucose_level")
@@ -629,7 +631,9 @@ Checking Plots for Correlation
 
 
 library(PerformanceAnalytics)
+
 #chart.Correlation(brainData %>% select(-glucoseGroup), method = "kendall") 
+
 
 ```
 
@@ -681,7 +685,8 @@ nrow(no_outlier)
 
 
 ```{r, results='markup'}
-df_hypertension_stroke <- brainData %>%
+
+df_hypertension_stroke <- data_no_outlier %>%
   group_by(hypertension, stroke) %>%
   count(stroke)
 #xkabledply(df_hypertension_stroke)
@@ -759,6 +764,7 @@ str(up_sample_data)
 
 
 
+
 ```{r, results='markup'}
 chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
 contable_gender = table(df$gender, df$stroke)
@@ -801,12 +807,15 @@ print(chitest_smoking_status)
 ```{r, results='markup'}
 print("For up sampled dataset")
 chisquare_for_dataset(up_sample_data)
+=======
 ```
 
 
 ```{r, results='markup'}
-#remotes::install_github("cran/DMwR")
-library(DMwR)
+
+# remotes::install_github("cran/DMwR")
+#library(DMwR)
+
 table(data_no_outlier$stroke)
 #use SMOTE to create new dataset that is more balanced
 balanced_df <- SMOTE(stroke ~ ., data_no_outlier, perc.over = 2000, perc.under = 200)
@@ -818,7 +827,95 @@ table(balanced_df$stroke)
 
 ```
 
+
 ```{r, results='markup'}
 print("For SMOTE upsampled dataset")
 chisquare_for_dataset(balanced_df)
 ```
+
+
+Effect of work type 
+
+```{r results='markup'}
+
+
+ggplot(data = brainData, mapping = aes(x = work_type, y = age)) +
+  geom_boxplot()
+
+
+
+select_heart_disease <- select(brainData, c('work_type','stroke'))
+workType_effect <- select_heart_disease %>% group_by(work_type, stroke) %>% count(stroke)
+ggplot(workType_effect, aes(work_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Work Type on stroke")
+ggplot(brainData, aes(work_type, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs work_type on stroke")
+
+#checking on balanced dataset 
+ggplot(data = balanced_df, mapping = aes(x = work_type, y = age)) +
+  geom_boxplot()
+
+
+select_heart_disease <- select(balanced_df, c('work_type','stroke'))
+workType_effect <- select_heart_disease %>% group_by(work_type, stroke) %>% count(stroke)
+ggplot(workType_effect, aes(work_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Work Type on stroke")
+ggplot(balanced_df, aes(work_type, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs work_type on stroke")
+
+```
+
+
+From the box plot people with govt_job, private and self-employed are more likely to get heart stroke. 
+But when comparing with age, this might be because people who have stroke in these 3 categories are older. 
+So age might be contributing to this dependence. 
+
+
+
+```{r results='markup'}
+#model2 <- glm( stroke ~. , data = balanced_df, family = binomial)
+# Summarize the model
+#summary(model2)
+```
+
+
+**Data Analysis for Ever Married**
+
+```{r results='markup'}
+
+
+ggplot(data = brainData, mapping = aes(x = ever_married, y = age)) +
+  geom_boxplot()
+
+
+select_married <- select(brainData, c('ever_married','stroke'))
+married_effect <- select_married %>% group_by(ever_married, stroke) %>% count(stroke)
+ggplot(married_effect, aes(ever_married, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Marriage Status on stroke")
+ggplot(brainData, aes(ever_married, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs ever_married on stroke")
+
+#checking on balanced dataset 
+ggplot(data = balanced_df, mapping = aes(x = ever_married, y = age)) +
+  geom_boxplot()
+
+
+select_married <- select(balanced_df, c('ever_married','stroke'))
+married_effect <- select_married %>% group_by(ever_married, stroke) %>% count(stroke)
+ggplot(married_effect, aes(ever_married, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Marriage Status on stroke")
+ggplot(balanced_df, aes(ever_married, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs ever_married on stroke")
+
+```
+
+* From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
+
