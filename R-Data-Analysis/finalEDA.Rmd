@@ -24,6 +24,7 @@ library(dplyr)
 library(DMwR)
 library(SmartEDA) 
 library(DataExplorer)
+library("corrplot")
 ``` 
 
 Importing our dataset and checking summary
@@ -264,9 +265,15 @@ ExpCatViz(
 As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
 The difference is huge for Diabetic Category
 
-```{r results='asis'}
+```{r results='markup'}
 #correlation
+
+corr_data <- select_if(cleanData, is.numeric)
+cor_mat <- cor(corr_data)
+corrplot(cor_mat,method="number")
+
 ```
+As seen from the above plot, average glucose level and age are slightly correlated
 
 
 
