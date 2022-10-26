@@ -475,4 +475,4 @@ ggplot(heart_disease_positive, mapping = aes(x=age, y=n)) +
   labs(title="Trend of number of heart disease cases with age", subtitle="Age distribution",x="Age",y="Number of subjects with heart disease")
 ```
  
-* From the plots above we see that heart disease does not really have a strong impact on stroke unlike age which has a big factor on stroke. We then see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are more proned to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
+* From the plots above we see that heart disease does not really have a strong impact on stroke unlike age which has a big factor on stroke. We then see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
