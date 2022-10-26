@@ -15,12 +15,16 @@ Importing all the relevant packages and libraries
 #install packages
 #remotes::install_github("cran/DMwR")
 #install.packages("moments")
+#install.packages("DataExplorer")
 
 #import libraries all
 library(ggplot2)
 library(moments)
 library(dplyr)
 library(DMwR)
+library(SmartEDA) 
+library(DataExplorer)
+library("corrplot")
 ``` 
 
 Importing our dataset and checking summary
@@ -64,8 +68,15 @@ summary(brainData)
 **Class Imbalance problem** \
 we have 42617 observations for stroke = 0 and 783 observations for stroke =1 \
 \ 
-Cleaning the dataset
 
+Checking Box Plots for visualizing numeric variables
+```{r results='markup'}
+#concise box plot for numeric variables
+plot_boxplot(brainData, by = "stroke")
+
+```
+
+Cleaning the dataset
 
 Removing missing Values for smoking status 
 ```{r results='markup'}
@@ -131,36 +142,41 @@ cleanData <- subset(cleanData, cleanData$bmi > Lower_bmi & cleanData$bmi < Upper
 
 dim(cleanData)
 ```
-```{r, results='markup'}
+We won't be removing Outliers for Age and Average level because\
+1) max value of age is 82, so nothing is unusual about that \
+2)avg_glucose_level is losing the relationship with stroke if we remove the outliers \
+When we try to upsample that difference is even more nullified \
 
-```
 
-
-Removing Outliers for Average Glucose Level
-```{r results='markup'}
-
-dim(cleanData)
-quartiles_glucose <- quantile(cleanData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
-IQR_glucose <- IQR(cleanData$avg_glucose_level)
-
- 
-Lower_glucose <- quartiles_glucose[1] - 1.5*IQR_glucose
-Upper_glucose <- quartiles_glucose[2] + 1.5*IQR_glucose
-
-#since all the missing values are for stroke =0 entries, we will directly drop it
-
-cleanData <- subset(cleanData, cleanData$avg_glucose_level > Lower_glucose & cleanData$avg_glucose_level < Upper_glucose)
-
-dim(cleanData)
-
-```
 
 Let's check the distribution for numeric variables, bmi,age, avg_glucose_level : boxplot(outlier) and histogram(normal) => outliers **while doing avg_glucose_level and bmi => groupwise analysis as well**
 
+Making a separate column for average glucose level \
+Here as we can see, people who have diabetes are more likely to get stroke.
 
 ```{r results='markup'}
-```
+cleanData$glucoseGroup=cut(cleanData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+#0-114 : Normal glucose level
+#114-140 : Prediabetes
+#140- infinity : Diabetes 
 
+#glucoseGroup to stroke relations
+#ggbarstats(data=cleanData,y=glucoseGroup,x=stroke,label="both")
+#people with diabetes have a high chance of getting stroke 
+df_glucose <- cleanData %>%
+  group_by(glucoseGroup, stroke) %>%
+  count(stroke)
+#grouping data into three glucose level
+
+df_glucose %>%
+ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of subjects with Different Glucose Level", 
+       x = "glucoseGroup", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+
+```
 
 ```{r results='markup'}
 
@@ -172,8 +188,9 @@ cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
 
 #view distribution of response variable in new dataset
 table(cleanData$stroke)
-
 ```
+
+
 ```{r, results='markup'}
 
 ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
@@ -192,9 +209,72 @@ ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill = stroke, color
 From the box plots above, there is no strong evidence of subjects having stroke with respect to BMI and gender.
 
 
+**Average Glucose Level**
+As seen from below graph, even though before upsampling data the higher value of glucose level were contributing to the chances of stroke i.e stroke = 1.
+
+Average Glucose Level after upsampling
+
 ```{r results='markup'}
+df_glucose <- cleanData %>%
+  group_by(glucoseGroup, stroke) %>%
+  count(stroke)
+#grouping data into three glucose level
+
+df_glucose %>%
+ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of subjects with Different Glucose Level", 
+       x = "glucoseGroup", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+```
+
+
+After Upsampling the relationship is lost. 
+```{r results='markup'}
+get_box_stats <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = stroke, y = avg_glucose_level, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
 
 ```
+
+
+```{r results='markup'}
+
+# percent of people with and without stroke for glucose level in three categories 
+ExpCatViz(
+  cleanData %>% 
+    select(stroke, glucoseGroup), 
+  target="stroke",col=c("Blue", "red"))
+```
+
+As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
+The difference is huge for Diabetic Category
+
+```{r results='markup'}
+#correlation
+
+corr_data <- select_if(cleanData, is.numeric)
+cor_mat <- cor(corr_data)
+corrplot(cor_mat,method="number")
+
+```
+As seen from the above plot, average glucose level and age are slightly correlated
+
 
 
 3)do plots
