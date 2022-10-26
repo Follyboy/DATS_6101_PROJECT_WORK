@@ -1,0 +1,169 @@
+---
+title: "finalEDA"
+author: "Team 6"
+date: "2022-10-26"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Importing all the relevant packages and libraries 
+
+```{r results='markup'}
+#install packages
+#remotes::install_github("cran/DMwR")
+
+
+#import libraries all
+#library(DMwR)
+``` 
+
+Importing our dataset and checking summary
+```{r results='markup'}
+#importing brain dataset
+data <- data.frame(read.csv("dataset.csv"))
+
+
+#checking the structure of our dataset 
+str(data)
+
+#since ID won't be useful during prediction so removing that 
+brainData <- select(data, -c('id'))
+
+#checking top5 entries in our dataset 
+head(brainData)
+```
+
+Checking the summary of our dataset
+```{r results='markup'}
+summary(brainData)
+```
+
+Since most of the varibales our categorical, converting them to factors
+```{r results='markup'}
+#Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
+brainData$gender = factor(brainData$gender)
+brainData$hypertension = factor(brainData$hypertension)
+brainData$heart_disease = factor(brainData$heart_disease)
+brainData$ever_married = factor(brainData$ever_married)
+brainData$work_type = factor(brainData$work_type)
+brainData$Residence_type = factor(brainData$Residence_type)
+brainData$smoking_status = factor(brainData$smoking_status)
+brainData$stroke = factor(brainData$stroke)
+str(brainData)
+summary(brainData)
+```
+
+
+*We can see missing values in bmi, smoking_status \
+**Class Imbalance problem** \
+we have 42617 observations for stroke = 0 and 783 observations for stroke =1 \
+\ 
+Cleaning the dataset
+
+
+Removing missing Values for smoking status 
+```{r results='markup'}
+cleanData = brainData
+cleanData[cleanData == ''] <- NA
+nrow(cleanData)
+cleanData <- subset(cleanData, !is.na(smoking_status))
+nrow(cleanData)
+```
+
+Replacing Missing Values : BMI 
+```{r results='markup'}
+
+#removing missing values for BMI
+cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
+summary(cleanData)
+```
+Removing Outliers for BMI 
+```{r results='markup'}
+
+dim(cleanData)
+quartiles_bmi <- quantile(cleanData$bmi, probs=c(.25, .75), na.rm = FALSE)
+IQR_bmi <- IQR(cleanData$bmi)
+
+ 
+Lower_bmi <- quartiles_bmi[1] - 1.5*IQR_bmi
+Upper_bmi <- quartiles_bmi[2] + 1.5*IQR_bmi
+
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+cleanData <- subset(cleanData, cleanData$bmi > Lower_bmi & cleanData$bmi < Upper_bmi)
+
+dim(cleanData)
+```
+
+
+
+Removing Outliers for Average Glucose Level
+```{r results='markup'}
+
+dim(cleanData)
+quartiles_glucose <- quantile(cleanData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
+IQR_glucose <- IQR(cleanData$avg_glucose_level)
+
+ 
+Lower_glucose <- quartiles[1] - 1.5*IQR
+Upper_glucose <- quartiles[2] + 1.5*IQR
+
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+cleanData <- subset(cleanData, cleanData$avg_glucose_level > Lower_glucose & cleanData$avg_glucose_level < Upper_glucose)
+
+dim(cleanData)
+
+```
+
+Let's check the distribution for numeric variables, bmi,age, avg_glucose_level : boxplot(outlier) and histogram(normal) => outliers **while doing avg_glucose_level and bmi => groupwise analysis as well**
+3)do plots
+
+```{r results='markup'}
+```
+
+4)show missing values for bmi and smoking_status
+5)filling NA for bmi
+6)removie for smoking_status 
+7)remove outliers
+
+
+8)smote
+```{r results='markup'}
+
+table(cleanData$stroke)
+#use SMOTE to create new dataset that is more balanced
+cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
+#minority => 2000/100 =20 so 20*(strok1Observations=416) #upsampling 
+#200/100 =2, make the majority observation 2 time the minority observations #downsampling 
+
+#view distribution of response variable in new dataset
+table(cleanData$stroke)
+
+```
+9)plot them again : qqplot => normality  
+
+```{r results='markup'}
+
+```
+
+10) Comparison of age,bmi, avg_glucose_level to stroke
+11) correlation plot for numeric variables
+
+12) Plot correlation matrix for categorical variables 
+13) analysis of residence_type and drop it 
+14)Heart Disease: variable + age 
+15)Hypertension : variable +age
+16)Ever Married
+17)Smoking Status
+18)Gender
+19)WorkType
+20)All the testing anova, chi-square
+21)Conclusion : major factor, what all other factors it depends on, (logistic regression test)
+
+
+
+
