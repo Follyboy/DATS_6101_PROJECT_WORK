@@ -156,18 +156,12 @@ dim(cleanData)
 ```
 
 Let's check the distribution for numeric variables, bmi,age, avg_glucose_level : boxplot(outlier) and histogram(normal) => outliers **while doing avg_glucose_level and bmi => groupwise analysis as well**
-3)do plots
+
 
 ```{r results='markup'}
 ```
 
-4)show missing values for bmi and smoking_status
-5)filling NA for bmi
-6)removie for smoking_status 
-7)remove outliers
 
-
-8)smote
 ```{r results='markup'}
 
 table(cleanData$stroke)
@@ -180,12 +174,36 @@ cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
 table(cleanData$stroke)
 
 ```
-9)plot them again : qqplot => normality  
+```{r, results='markup'}
+
+ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
+  geom_boxplot()
+```
+With the boxplot above, subjects who have stroke has slightly lower BMI than subjects who did not have stroke. 
+
+```{r, results='markup'}
+ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill = stroke, color = gender)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of BMI", 
+       x = "Stroke", 
+       y = "BMI") +
+  scale_fill_brewer(palette = "Paired")
+```
+From the box plots above, there is no strong evidence of subjects having stroke with respect to BMI and gender.
+
 
 ```{r results='markup'}
 
 ```
 
+
+3)do plots
+4)show missing values for bmi and smoking_status
+5)filling NA for bmi
+6)removie for smoking_status 
+7)remove outliers
+8)smote
+9)plot them again : qqplot => normality  
 10) Comparison of age,bmi, avg_glucose_level to stroke
 11) correlation plot for numeric variables
 
