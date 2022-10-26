@@ -306,11 +306,10 @@ ggplot(brainData, aes(heart_disease, age, color = stroke)) +
  
 * After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
 
-15)Hypertension : variable +age
 
 ```{r, results='markup'}
 
-df_hypertension_stroke <- data_no_outlier %>%
+df_hypertension_stroke <- cleanData %>%
   group_by(hypertension, stroke) %>%
   count(stroke)
 
@@ -321,15 +320,6 @@ ggplot(mapping = aes(x = hypertension, y = n, fill = factor(stroke))) +
        x = "Hypertension", 
        y = "Percentage") +
   scale_fill_brewer(palette = "Paired")
-
-# df_count_hyptension_with_age <-
-#   group_by(cleanData, age, hypertension) %>%
-#   count(hypertension)
-# 
-# hypertension_positive = subset(df_count_hyptension_with_age, df_count_hyptension_with_age$hypertension==1)
-
-# ggplot(hypertension_positive, mapping = aes(x=age, y=n)) + geom_point(alpha=0.5) + geom_smooth(method="loess",span=0.3)+
-#   labs(title="Trend of number of hypertension cases with age", subtitle="Age distribution",x="Age",y="Number of subjects with hypertension")
 
 ggplot(cleanData, aes(hypertension, age, color = stroke)) + 
   geom_boxplot() + 
@@ -368,8 +358,6 @@ ggplot(cleanData, aes(ever_married, age, color = stroke)) +
 * From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
 
 
-17)Smoking Status
-
 **Data Analysis for Smoking Status**
 
 ```{r results='markup'}
@@ -389,6 +377,7 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
   geom_bar(stat = 'identity', position='fill') + 
   ggtitle("Distribution for smoking_status on stroke")
 ```
+
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
 
 
