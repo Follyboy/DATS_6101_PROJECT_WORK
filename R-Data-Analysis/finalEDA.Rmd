@@ -65,8 +65,15 @@ summary(brainData)
 **Class Imbalance problem** \
 we have 42617 observations for stroke = 0 and 783 observations for stroke =1 \
 \ 
-Cleaning the dataset
 
+Checking Box Plots for visualizing numeric variables
+```{r results='markup'}
+#concise box plot for numeric variables
+plot_boxplot(brainData, by = "stroke")
+
+```
+```
+Cleaning the dataset
 
 Removing missing Values for smoking status 
 ```{r results='markup'}
@@ -254,6 +261,8 @@ ExpCatViz(
 
 As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
 The difference is huge for Diabetic Category
+
+
 
 
 3)do plots
