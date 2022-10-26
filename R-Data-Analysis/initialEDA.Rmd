@@ -807,7 +807,6 @@ print(chitest_smoking_status)
 ```{r, results='markup'}
 print("For up sampled dataset")
 chisquare_for_dataset(up_sample_data)
-=======
 ```
 
 
