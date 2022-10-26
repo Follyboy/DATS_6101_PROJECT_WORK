@@ -453,4 +453,26 @@ str(brainData)
 ggbarstats(data=brainData,y=bmiGroup,x=stroke,label="both")
 ```
 
+**Data Analysis for Heart Disease**
 
+```{r results='markup'}
+select_heart_disease <- select(brainData, c('heart_disease','stroke'))
+heart_effect <- select_heart_disease %>% group_by(heart_disease, stroke) %>% count(stroke)
+ggplot(heart_effect, aes(heart_disease, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for heart disease on stroke")
+ggplot(brainData, aes(heart_disease, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs heart_disease on stroke")
+
+count_heart_disease_with_age = group_by(brainData, age, heart_disease) %>% count(heart_disease)
+
+heart_disease_positive = subset(count_heart_disease_with_age, count_heart_disease_with_age$heart_disease==1)
+
+ggplot(heart_disease_positive, mapping = aes(x=age, y=n)) +
+  geom_point() + 
+  geom_smooth(method="loess",span=0.3) +
+  labs(title="Trend of number of heart disease cases with age", subtitle="Age distribution",x="Age",y="Number of subjects with heart disease")
+```
+ 
+* From the plots above we see that heart disease does not really have a strong impact on stroke unlike age which has a big factor on stroke. We then see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are more proned to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
