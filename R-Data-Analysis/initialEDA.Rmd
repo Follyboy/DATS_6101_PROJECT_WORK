@@ -741,7 +741,7 @@ ggplot(heart_disease_positive, mapping = aes(x=age, y=n)) +
 
 
 ```{r, results='markup'}
-install.packages("caret") #for upsample function we need this library
+#install.packages("caret") #for upsample function we need this library
 # after installing this library, I faced an error with rlang version. So simply uninstall rlang and reinstall
 # remove.packages("rlang")
 #install.packages("rlang")
@@ -759,8 +759,8 @@ table(up_sample_data$Class)  # by default the name of dependent variable is chan
 table(data_no_outlier$stroke)
 #use SMOTE to create new dataset that is more balanced
 balanced_df <- SMOTE(stroke ~ ., data_no_outlier, perc.over = 2000, perc.under = 200)
-#minority => 2000/100 =20 so 30*(strok1Observations=416)
-#200/100 =2, make the majority observation 2 time the minority observations
+#minority => 2000/100 =20 so 20*(strok1Observations=416) #upsampling 
+#200/100 =2, make the majority observation 2 time the minority observations #downsampling 
 
 #view distribution of response variable in new dataset
 table(balanced_df$stroke)
