@@ -754,7 +754,7 @@ table(up_sample_data$Class)  # by default the name of dependent variable is chan
 
 
 ```{r, results='markup'}
-#remotes::install_github("cran/DMwR")
+# remotes::install_github("cran/DMwR")
 #library(DMwR)
 table(data_no_outlier$stroke)
 #use SMOTE to create new dataset that is more balanced
@@ -815,3 +815,40 @@ So age might be contributing to this dependence.
 # Summarize the model
 #summary(model2)
 ```
+
+
+**Data Analysis for Ever Married**
+
+```{r results='markup'}
+
+
+ggplot(data = brainData, mapping = aes(x = ever_married, y = age)) +
+  geom_boxplot()
+
+
+select_married <- select(brainData, c('ever_married','stroke'))
+married_effect <- select_married %>% group_by(ever_married, stroke) %>% count(stroke)
+ggplot(married_effect, aes(ever_married, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Marriage Status on stroke")
+ggplot(brainData, aes(ever_married, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs ever_married on stroke")
+
+#checking on balanced dataset 
+ggplot(data = balanced_df, mapping = aes(x = ever_married, y = age)) +
+  geom_boxplot()
+
+
+select_married <- select(balanced_df, c('ever_married','stroke'))
+married_effect <- select_married %>% group_by(ever_married, stroke) %>% count(stroke)
+ggplot(married_effect, aes(ever_married, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Marriage Status on stroke")
+ggplot(balanced_df, aes(ever_married, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs ever_married on stroke")
+
+```
+
+* From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
