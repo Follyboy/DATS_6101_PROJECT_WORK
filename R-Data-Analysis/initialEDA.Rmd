@@ -452,5 +452,228 @@ str(brainData)
 
 ggbarstats(data=brainData,y=bmiGroup,x=stroke,label="both")
 ```
+Summary Analysis of Average Glucose level \
+
+
+
+Histogram and Box Plot Distribution of Average Glucose Level
+
+```{r results='markup'}
+#histogram for Average Glucose Level
+library(ggplot2)
+ggplot(data=brainData, aes(avg_glucose_level)) +
+geom_histogram(col="black",
+fill="blue") +
+labs(x="Avg Glucose Level", y="frequency") +
+labs(title="Distribution for Average Glucose Level")
+
+#Boxplot for average glucose level
+ggplot(data = brainData, mapping = aes( y = avg_glucose_level)) +
+  geom_boxplot()
+
+```
+```{r results='markup'}
+#install.packages("flextable")
+library(flextable)
+library(SmartEDA) 
+ExpNumStat(brainData, by="GA", gp="stroke", Outlier=TRUE, Qnt = c(.25, .75), round = 2) %>% flextable()
+
+#outliers
+#library(performance)
+#plot(check_outliers(brainData$avg_glucose_level, method = "zscore"))
+```
+```{r results='markup'}
+
+#removing outliers for Glucose from the data 
+#brainData_removedOutlierGlucose = 
+
+quartiles <- quantile(brainData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(brainData$avg_glucose_level)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+data_no_outlier = brainData
+#data_no_outlier$avg_glucose_level <- replace(data_no_outlier$avg_glucose_level,data_no_outlier$avg_glucose_level > Upper, NA)
+
+ 
+data_no_outlier <- subset(brainData, brainData$avg_glucose_level > Lower & brainData$avg_glucose_level < Upper)
+dim(brainData)
+dim(data_no_outlier)
+
+
+
+#Histogram for average glucose level after removing outlier
+ggplot(data=data_no_outlier, aes(avg_glucose_level)) +
+geom_histogram(col="black",
+fill="blue") +
+labs(x="Avg Glucose Level", y="frequency") +
+labs(title="Distribution for Average Glucose Level")
+
+#Boxplot for average glucose level after removing outlier
+ggplot(data =data_no_outlier, mapping = aes( y = avg_glucose_level)) +
+  geom_boxplot()
+ExpNumStat(data_no_outlier, by="GA", gp="stroke", Outlier=TRUE, Qnt = c(.25, .75), round = 2) %>% flextable()
+```
+
+Checking Normality using qq plot
+
+```{r results='markup'}
+#qq plot for checking normality 
+plot_qq(brainData, by = "stroke") 
+plot_qq(data_no_outlier, by = "stroke")
+
+#Shapiro-Wilk Normality test.
+#install.packages("ggpubr")
+#library(ggpubr)
+#ggqqplot(brainData, "avg_glucose_level", facet.by = "stroke")
+ggqqplot(brainData, "avg_glucose_level")
+ggqqplot(data_no_outlier, "avg_glucose_level")
+```
+
+As seen from above plots, average glucose level curve is more close to a normal distribution after removing outliers.
+
+```{r results='markup'}
+
+# Fit the model
+model <- glm( stroke ~ avg_glucose_level , data = brainData, family = binomial)
+# Summarize the model
+summary(model)
+#(model.null - model.proposed)/model.null
+
+# Fit the model
+model1 <- glm( stroke ~ glucoseGroup , data = brainData, family = binomial)
+# Summarize the model
+summary(model1)
+
+(model1.null - model1.proposed)/model1.null
+```
+Equation would be : 
+p = exp(-5.15 + 0.010*`avg_glucose_level`)/ [1 + exp(-5.15 + 0.010*`avg_glucose_level`)]
+With the low value of p we can reject our null hypothesis and thus, avg_glucose_level is closely related to stroke
+
+```{r results='markup'}
+# Fit the model
+model2 <- glm( stroke ~ glucoseGroup , data = brainData, family = binomial)
+# Summarize the model
+summary(model2)
+
+model2.null <- model2$null.deviance/-2 
+model2.proposed <- model2$deviance/-2
+(model2.null - model2.proposed)/model2.null
+
+```
+log(odds) of stroke that a normal person has stroke are : -4.28507 +  0.09157x0 + 1.20138x0 
+log(odds) of stroke that a prediabetes person has stroke are : -4.28507 +  0.09157x1 + 1.20138x0 
+log(odds) of stroke that a diabetes person has stroke are : -4.28507 +  0.09157x0 + 1.20138x1
+
+
+Checking for all variables
+```{r results='markup'}
+# Fit the model
+model2 <- glm( stroke ~. , data = brainData, family = binomial)
+# Summarize the model
+summary(model2)
+
+model2.null <- model2$null.deviance/-2 
+model2.proposed <- model2$deviance/-2
+(model2.null - model2.proposed)/model2.null
+```
+
+
+
+
+```{r results='markup'}
+#concise box plot for numeric variables
+plot_boxplot(brainData, by = "stroke")
+plot_boxplot(data_no_outlier, by = "stroke")
+```
+Converting Glucose into Categorical variable and testing the results 
+```{r results='markup'}
+library(SmartEDA) 
+# percent of people with and without stroke for glucose level in three categories 
+ExpCatViz(
+  brainData %>% 
+    select(stroke, glucoseGroup), 
+  target="stroke",col=c("Blue", "red"))
+#density plot of 3 numeric groupp age,avg_glucose_level, bmi
+#plot_density(brainData)
+
+#install.packages("flextable")
+#checking correlation
+ggcorrmat(
+  data   = brainData,
+  type   = "np",
+  output = "dataframe"
+) %>% 
+  mutate_if(is.numeric, ~round(., 3)) %>% 
+  flextable()
+```
+
+Checking Plots for Correlation
+```{r results='markup'}
+#install.packages("dlookr")
+#library(dlookr)
+#checking various plots for correlation
+#plot_correlate(brainData, method = "kendall")
+#ggscatterstats(
+#  data = brainData,
+#  x = age,
+#  y = avg_glucose_level,
+#  type = "np" # try the "robust" correlation too! It might be even better here
+  #, marginal.type = "boxplot"
+#)
+
+#library(PerformanceAnalytics)
+chart.Correlation(brainData %>% select(-glucoseGroup), method = "kendall") 
+
+```
+
+
+Removing Outlier 
+```{r results='markup'}
+#brainData[brainData == ''] <- NA
+#no_na_for_smoking_status <- subset(brainData, !is.na(smoking_status))
+#no_na_for_smoking_status
+#
+#without avg_glucose_level outliers : data_no_outlier
+
+
+quartiles <- quantile(brainData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
+IQR <- IQR(brainData$avg_glucose_level)
+ 
+Lower <- quartiles[1] - 1.5*IQR
+Upper <- quartiles[2] + 1.5*IQR 
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+data_no_outlier = brainData
+data_no_outlier <- subset(brainData, brainData$avg_glucose_level > Lower & brainData$avg_glucose_level < Upper)
+dim(brainData)
+dim(data_no_outlier)
+
+
+
+#data_no_outlier[data_no_outlier == ''] <- NA
+#data_no_outlier<- subset(data_no_outlier, !is.na(smoking_status))
+data_no_outlier <- subset(data_no_outlier, data_no_outlier$smoking_status != '' )
+dim(data_no_outlier)
+```
+```{r results='markup'}
+quartiles_bmi <- quantile(data_no_outlier$bmi, probs=c(.25, .75), na.rm = FALSE)
+IQR_bmi <- IQR(data_no_outlier$bmi)
+Lower_bmi <- quartiles_bmi[1] - 1.5*IQR_bmi
+Upper_bmi <- quartiles_bmi[2] + 1.5*IQR_bmi
+#since all the missing values are for stroke =0 entries, we will directly drop it
+data_no_outlier <- subset(data_no_outlier, data_no_outlier$bmi > Lower_bmi & data_no_outlier$bmi< Upper_bmi)
+#dim(brainData)
+dim(data_no_outlier)
+#
+yes_outlier <- subset(data_no_outlier, data_no_outlier$stroke == 1)
+no_outlier <- subset(data_no_outlier, data_no_outlier$stroke == 0)
+nrow(yes_outlier)
+nrow(no_outlier)
+```
+
 
 
