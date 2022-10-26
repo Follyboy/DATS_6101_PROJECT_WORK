@@ -85,6 +85,19 @@ nrow(cleanData)
 cleanData <- subset(cleanData, !is.na(smoking_status))
 nrow(cleanData)
 ```
+```{r, results='markup'}
+table(cleanData$gender)
+```
+Since other gender entries are very less, we will just drop the other rows.
+
+```{r, results='markup'}
+drop_others = subset(cleanData, cleanData$gender != 'Other')
+table(drop_others$gender)
+cleanData <- drop_others
+
+```
+
+
 Analysis for BMI NULL values.
 ```{r, results='markup'}
 ggplot(data=brainData, aes(bmi)) +
@@ -263,6 +276,20 @@ ExpCatViz(
 
 As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
 The difference is huge for Diabetic Category
+
+```{r, results='markup'}
+ggplot(cleanData, aes(x = age)) +
+geom_density() +
+geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
+labs(title = "Age Density", x = "Age", y = "Density")
+```
+```{r, results='markup'}
+ggplot(cleanData, aes(x = age, fill = gender)) +
+geom_density(alpha = 0.4) +
+geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
+labs(title = "Age Density", x = "Age", y = "Density")
+```
+
 
 ```{r results='asis'}
 #correlation
