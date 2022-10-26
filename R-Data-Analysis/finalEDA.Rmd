@@ -72,7 +72,7 @@ Checking Box Plots for visualizing numeric variables
 plot_boxplot(brainData, by = "stroke")
 
 ```
-```
+
 Cleaning the dataset
 
 Removing missing Values for smoking status 
