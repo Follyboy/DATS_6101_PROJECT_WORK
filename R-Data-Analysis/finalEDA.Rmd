@@ -14,10 +14,13 @@ Importing all the relevant packages and libraries
 ```{r results='markup'}
 #install packages
 #remotes::install_github("cran/DMwR")
-
+#install.packages("moments")
 
 #import libraries all
-#library(DMwR)
+library(ggplot2)
+library(moments)
+library(dplyr)
+library(DMwR)
 ``` 
 
 Importing our dataset and checking summary
@@ -72,14 +75,45 @@ nrow(cleanData)
 cleanData <- subset(cleanData, !is.na(smoking_status))
 nrow(cleanData)
 ```
+Analysis for BMI NULL values.
+```{r, results='markup'}
+ggplot(data=brainData, aes(bmi)) +
+geom_histogram(col="black",
+fill="blue") +
+labs(x="bmi", y="frequency") +
+labs(title="plot of bmi")
+```
+```{r, results='markup'}
+tempdf <- subset(brainData, !is.na(bmi))  # removing NA values from bmi and storing it in tempdf
+density_bmi <- density(tempdf$bmi)
+plot(density_bmi)    #plotting the density curve of bmi values
 
-Replacing Missing Values : BMI 
+ggplot(data = tempdf, mapping = aes(y = bmi)) +
+  geom_boxplot() + geom_boxplot( colour="black", fill="#7777cc", outlier.colour="red", outlier.shape=8, outlier.size=2)  #plotting the boxplot for bmi values.
+```
+```{r, results='markup'}
+skewness_value <- skewness(tempdf$bmi)
+```
+Skewness value: `r skewness_value`
+
+
+From the density curve and skewness value, BMI is rightly skewed. So mean is not the right central tendency to fill NA values in BMI.
+We will NA values in BMI using median of the data.
+Note: Negative skewness value indicates left skewed and positive skewness value indicates right skewed.
+The rule of thumb seems to be:
+
+If the skewness is between -0.5 and 0.5, the data are fairly symmetrical
+If the skewness is between -1 and – 0.5 or between 0.5 and 1, the data are moderately skewed
+If the skewness is less than -1 or greater than 1, the data are highly skewed
+
+Replacing Missing Values for BMI with median.
 ```{r results='markup'}
 
 #removing missing values for BMI
 cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
 summary(cleanData)
 ```
+
 Removing Outliers for BMI 
 ```{r results='markup'}
 
@@ -97,7 +131,9 @@ cleanData <- subset(cleanData, cleanData$bmi > Lower_bmi & cleanData$bmi < Upper
 
 dim(cleanData)
 ```
+```{r, results='markup'}
 
+```
 
 
 Removing Outliers for Average Glucose Level
@@ -108,8 +144,8 @@ quartiles_glucose <- quantile(cleanData$avg_glucose_level, probs=c(.25, .75), na
 IQR_glucose <- IQR(cleanData$avg_glucose_level)
 
  
-Lower_glucose <- quartiles[1] - 1.5*IQR
-Upper_glucose <- quartiles[2] + 1.5*IQR
+Lower_glucose <- quartiles_glucose[1] - 1.5*IQR_glucose
+Upper_glucose <- quartiles_glucose[2] + 1.5*IQR_glucose
 
 #since all the missing values are for stroke =0 entries, we will directly drop it
 
