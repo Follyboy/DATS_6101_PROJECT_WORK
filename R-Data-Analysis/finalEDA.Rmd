@@ -15,6 +15,7 @@ Importing all the relevant packages and libraries
 #install packages
 #remotes::install_github("cran/DMwR")
 #install.packages("moments")
+#install.packages("DataExplorer")
 
 #import libraries all
 library(ggplot2)
@@ -22,6 +23,7 @@ library(moments)
 library(dplyr)
 library(DMwR)
 library(SmartEDA) 
+library(DataExplorer)
 ``` 
 
 Importing our dataset and checking summary
