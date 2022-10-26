@@ -520,12 +520,15 @@ ExpNumStat(data_no_outlier, by="GA", gp="stroke", Outlier=TRUE, Qnt = c(.25, .75
 Checking Normality using qq plot
 
 ```{r results='markup'}
+library(ggplot2)
 #qq plot for checking normality 
 plot_qq(brainData, by = "stroke") 
 plot_qq(data_no_outlier, by = "stroke")
 
 #Shapiro-Wilk Normality test.
+
 #install.packages("ggpubr")
+
 library(ggpubr)
 #ggqqplot(brainData, "avg_glucose_level", facet.by = "stroke")
 ggqqplot(brainData, "avg_glucose_level")
@@ -547,7 +550,7 @@ model1 <- glm( stroke ~ glucoseGroup , data = brainData, family = binomial)
 # Summarize the model
 summary(model1)
 
-(model1.null - model1.proposed)/model1.null
+#(model1.null - model1.proposed)/model1.null
 ```
 Equation would be : 
 p = exp(-5.15 + 0.010*`avg_glucose_level`)/ [1 + exp(-5.15 + 0.010*`avg_glucose_level`)]
@@ -624,9 +627,13 @@ Checking Plots for Correlation
 #  type = "np" # try the "robust" correlation too! It might be even better here
   #, marginal.type = "boxplot"
 #)
+#install.packages("PerformanceAnalytics")
+
 
 library(PerformanceAnalytics)
-chart.Correlation(brainData %>% select(-glucoseGroup), method = "kendall") 
+
+#chart.Correlation(brainData %>% select(-glucoseGroup), method = "kendall") 
+
 
 ```
 
@@ -678,6 +685,7 @@ nrow(no_outlier)
 
 
 ```{r, results='markup'}
+
 df_hypertension_stroke <- data_no_outlier %>%
   group_by(hypertension, stroke) %>%
   count(stroke)
@@ -745,17 +753,69 @@ ggplot(heart_disease_positive, mapping = aes(x=age, y=n)) +
 # after installing this library, I faced an error with rlang version. So simply uninstall rlang and reinstall
 # remove.packages("rlang")
 #install.packages("rlang")
+library("caret")
 
 up_sample_data = upSample(x=data_no_outlier[,-11], y=data_no_outlier$stroke)
 
-table(up_sample_data$Class)  # by default the name of dependent variable is changed to class.
+table(up_sample_data$Class)# by default the name of dependent variable is changed to class.
+colnames(up_sample_data)[14] <- "stroke"
+str(up_sample_data)
+```
 
+
+
+
+```{r, results='markup'}
+chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
+contable_gender = table(df$gender, df$stroke)
+contable_age = table(df$age, df$stroke)
+contable_hypertension = table(df$hypertension, df$stroke)
+contable_heart_disease = table(df$heart_disease, df$stroke)
+contable_ever_married = table(df$ever_married, df$stroke)
+contable_work_type = table(df$work_type, df$stroke)
+contable_Residence_type = table(df$Residence_type, df$stroke)
+contable_avg_glucose_level = table(df$avg_glucose_level, df$stroke)
+contable_bmi = table(df$bmi, df$stroke)
+contable_smoking_status = table(df$smoking_status, df$stroke)
+
+chitest_gender = chisq.test(contable_gender)
+chitest_age = chisq.test(contable_age)
+chitest_hypertension = chisq.test(contable_hypertension)
+chitest_heart_disease = chisq.test(contable_heart_disease)
+chitest_ever_married = chisq.test(contable_ever_married)
+chitest_work_type = chisq.test(contable_work_type)
+chitest_Residence_type = chisq.test(contable_Residence_type)
+chitest_avg_glucose_level = chisq.test(contable_avg_glucose_level)
+chitest_bmi = chisq.test(contable_bmi)
+chitest_smoking_status = chisq.test(contable_smoking_status)
+
+
+print(chitest_gender)
+print(chitest_age)
+print(chitest_hypertension)
+print(chitest_heart_disease)
+print(chitest_ever_married)
+print(chitest_work_type)
+print(chitest_Residence_type)
+print(chitest_avg_glucose_level)
+print(chitest_bmi)
+print(chitest_smoking_status)
+
+}
+```
+
+```{r, results='markup'}
+print("For up sampled dataset")
+chisquare_for_dataset(up_sample_data)
+=======
 ```
 
 
 ```{r, results='markup'}
+
 # remotes::install_github("cran/DMwR")
 #library(DMwR)
+
 table(data_no_outlier$stroke)
 #use SMOTE to create new dataset that is more balanced
 balanced_df <- SMOTE(stroke ~ ., data_no_outlier, perc.over = 2000, perc.under = 200)
@@ -765,6 +825,12 @@ balanced_df <- SMOTE(stroke ~ ., data_no_outlier, perc.over = 2000, perc.under =
 #view distribution of response variable in new dataset
 table(balanced_df$stroke)
 
+```
+
+
+```{r, results='markup'}
+print("For SMOTE upsampled dataset")
+chisquare_for_dataset(balanced_df)
 ```
 
 
@@ -852,3 +918,4 @@ ggplot(balanced_df, aes(ever_married, age, color = stroke)) +
 ```
 
 * From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
+
