@@ -42,8 +42,8 @@ brainData$bmi[is.na(brainData$bmi)] <- median(brainData$bmi, na.rm = T) #replaci
 corr_brain <- select_if(brainData, is.numeric)
 head(corr_brain)
 library("corrplot")
-cor_mat <- cor(corr_brain)
-corrplot(cor_mat,method="number")
+#cor_mat <- cor(corr_brain)
+#corrplot(cor_mat,method="number")
 #pairs(brainData)
 ```
 
@@ -452,6 +452,43 @@ str(brainData)
 
 ggbarstats(data=brainData,y=bmiGroup,x=stroke,label="both")
 ```
+
+
+```{r, results='markup'}
+df_hypertension_stroke <- data1 %>%
+  group_by(hypertension, stroke) %>%
+  count(stroke)
+#xkabledply(df_hypertension_stroke)
+df_hypertension_stroke
+```
+
+```{r, results='markup'}
+df_hypertension_stroke %>%
+ggplot(mapping = aes(x = hypertension, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of subjects with Hypertension vs. without Hypertension", 
+       x = "Hypertension", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+```
+
+```{r, results='markup'}
+str(brainData)
+
+df_count_hyptension_with_age = group_by(brainData, age, hypertension) %>% count(hypertension)
+#df_count_hyptension_with_age
+
+hypertension_positive = subset(df_count_hyptension_with_age, df_count_hyptension_with_age$hypertension==1)
+#hypertension_positive
+ggplot(hypertension_positive, mapping = aes(x=age, y=n)) + geom_point(alpha=0.5) + geom_smooth(method="loess",span=0.3)+
+  labs(title="trend of number of hypertension cases with age", subtitle="Age distibution",x="Age",y="Number of subjects with hypertension")
+
+```
+
+
+As we can see from the graph that the number of hypertension cases increases with the age due to multiple biological factors.
+From the above charts, we see that the number of strokes is correlated to the hypertension status of the subject. But hypertension is in-turn correlated to age.
+
 
 **Data Analysis for Heart Disease**
 
