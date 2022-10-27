@@ -58,12 +58,14 @@ brainData <- select(data, -c('id'))
 head(brainData)
 ```
 
+### Data Analysing
 ### Checking the summary of our dataset
 ```{r results='markup'}
 summary(brainData)
 ```
 
-## Q-Q Plot to check normality of Numeric Variables 
+
+### Q-Q Plot to check normality of Numeric Variables 
 ```{r, results='markup'}
 qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
 qqline(brainData$age)
@@ -80,6 +82,7 @@ Age distribution is close to normal distribution\
 BMI is close to normal distribution with few outliers\
 Average Glucose curve is not very close to normal distribution\
 
+### Converting Categorical Variables  to Factors
 Since most of the variables are categorical, converting them to factors.\
 ```{r results='markup'}
 #Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
@@ -114,7 +117,8 @@ plot_boxplot(brainData, by = "stroke")
 
 ```
 
-### Cleaning the dataset : Smoking Status, Gender, BMI
+### Cleaning the dataset :
+###Smoking Status, Gender, BMI
 
 Removing missing Values from smoking status 
 ```{r results='markup'}
@@ -284,7 +288,7 @@ We made sure that the relationships before and after Sampling the data are intac
 
 Secondly, since glucoseGroup was formed based on avg_glucose_level, SMOTE being unaware of the cutoffs for Normal, Prediabetes and Diabetes didn't provided the expected results. So, we will divide the data again into the 3 categories for our analysis.
 
-
+### Removing Outliers From Average Glucose Level
 Since Upsampling is done, we can now remove the outliers
 ```{r results='asis'}
 
@@ -510,6 +514,7 @@ ggplot(cleanData, aes(x=age, y=bmi, color=stroke)) + geom_point()+
 ```
 No strong relation is observed from the scatter plot as well
 
+
 ### Correlation matrix for categorical variables
 ```{r, results='markup'}
 df_character <- select_if(cleanData, is.factor)
@@ -517,6 +522,7 @@ df_character <- select_if(cleanData, is.factor)
 plot_correlation(df_character)
 ```
 
+### Residence Type
 **Data Analysis for Residence Type**
 ```{r results='markup'}
 select_res <- select(cleanData, c('Residence_type','stroke'))
@@ -560,6 +566,7 @@ ggplot(recycleData, aes(heart_disease, age, color = stroke)) +
 
  After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.\
 
+### Hypertension
 **Data Analysis for Hypertension**
 
 ```{r, results='markup'}
@@ -636,7 +643,7 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
 
  After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.\
 
-
+### Gender
 **Data Analysis for Gender**
 
 ```{r results='markup'}
