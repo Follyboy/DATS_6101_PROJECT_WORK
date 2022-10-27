@@ -612,5 +612,32 @@ print(chitest_glucose_group)
 print("For up sampled dataset")
 chisquare_for_dataset(cleanData)
 ```
+**ttest**
+```{r, results='markup'}
+subset_stroke_1 = subset(cleanData, cleanData$stroke == 1)
+subset_stroke_0 = subset(cleanData, cleanData$stroke == 0)
 
+
+ttest2sample_age = t.test(subset_stroke_1$age, subset_stroke_0$age)
+ttest2sample_bmi = t.test(subset_stroke_1$bmi, subset_stroke_0$bmi)
+ttest2sample_glucose = t.test(subset_stroke_1$avg_glucose_level, subset_stroke_0$avg_glucose_level)
+
+print(ttest2sample_age)
+print(ttest2sample_bmi)
+print(ttest2sample_glucose)
+```
+**Age TTEST**\
+*NULL hypothesis*: Means of age with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of age with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is very small so we can reject the NULL hypothesis. So age with stroke and age without stroke have different distributions.
+
+**BMI TTEST**\
+*NULL hypothesis*: Means of BMI values with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of BMI values with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is not small so we cannot reject the NULL hypothesis. So BMI with stroke and BMI without stroke have same distributions.\
+
+**Glucose level TTEST**\
+*NULL hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is very small so we can reject the NULL hypothesis. So glucose levels with stroke and glucose levels without stroke have different distributions.\
 
