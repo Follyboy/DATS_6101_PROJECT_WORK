@@ -1,15 +1,29 @@
 ---
-title: "finalEDA"
-author: "Team 6"
-date: "2022-10-26"
-output: html_document
+title: "Cerebral Stroke Diagnosis based on physiological Factors"
+author: "TEAM 6"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
 ---
+
+# Exploratory data analysis
+
+## Cerebral stroke diagnosis dataset
+
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Importing all the relevant packages and libraries 
+### Importing all the relevant packages 
 
 ```{r results='markup'}
 #install packages
@@ -27,7 +41,7 @@ library(DataExplorer)
 library("corrplot")
 ``` 
 
-Importing our dataset and checking summary
+### Importing our dataset
 ```{r results='markup'}
 #importing brain dataset
 data <- data.frame(read.csv("dataset.csv"))
@@ -43,12 +57,12 @@ brainData <- select(data, -c('id'))
 head(brainData)
 ```
 
-Checking the summary of our dataset
+### Checking the summary of our dataset
 ```{r results='markup'}
 summary(brainData)
 ```
 
-Since most of the varibales our categorical, converting them to factors
+Since most of the variables our categorical, converting them to factors
 ```{r results='markup'}
 #Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
 brainData$gender = factor(brainData$gender)
@@ -76,7 +90,7 @@ plot_boxplot(brainData, by = "stroke")
 
 ```
 
-Cleaning the dataset
+### Cleaning the dataset
 
 Removing missing Values for smoking status 
 ```{r results='markup'}
@@ -138,6 +152,7 @@ cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replaci
 summary(cleanData)
 ```
 
+### Removing outliers
 Removing Outliers for BMI 
 ```{r results='markup'}
 
@@ -191,6 +206,8 @@ ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
 
 ```
 
+
+### Upsampling of data
 ```{r results='markup'}
 
 table(cleanData$stroke)
@@ -204,8 +221,8 @@ table(cleanData$stroke)
 ```
 
 
+### BMI analysis
 ```{r, results='markup'}
-
 ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
   geom_boxplot()
 ```
@@ -222,6 +239,7 @@ ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill = stroke, color
 From the box plots above, there is no strong evidence of subjects having stroke with respect to BMI and gender.
 
 
+### Glucose level analysis
 **Average Glucose Level**
 As seen from below graph, even though before upsampling data the higher value of glucose level were contributing to the chances of stroke i.e stroke = 1.
 
@@ -321,7 +339,7 @@ As seen from the above plot, average glucose level and age are slightly correlat
 13) analysis of residence_type and drop it 
 14)Heart Disease: variable + age 
 
-**Data Analysis for Heart Disease**
+### Data Analysis for Heart Disease
 
 ```{r results='markup'}
 select_heart_disease <- select(cleanData, c('heart_disease','stroke'))
@@ -362,7 +380,7 @@ As we can see from the graph that the number of hypertension cases increases wit
 From the above charts, we see that the number of strokes is correlated to the hypertension status of the subject. But hypertension is in-turn correlated to age.
 
 
-**Data Analysis for Ever Married**
+### Data Analysis for Ever Married
 
 ```{r results='markup'}
 
@@ -388,7 +406,7 @@ ggplot(cleanData, aes(ever_married, age, color = stroke)) +
 * From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
 
 
-**Data Analysis for Smoking Status**
+### Data Analysis for Smoking Status
 
 ```{r results='markup'}
 no_na_for_smoking_status <- subset(cleanData, !is.na(smoking_status))
@@ -413,7 +431,7 @@ After the analysis of smoking status against stroke where `0` is `No` and `1` is
 
 18)Gender
 
-**Data Analysis for Work Type**
+### Data Analysis for Work Type
 
 ```{r results='markup'}
 
@@ -444,7 +462,7 @@ So age might be contributing to this dependence.
 21)Conclusion : major factor, what all other factors it depends on, (logistic regression test)
 
 
-**Chi square Testing to check independence of variable**
+###Chi square Testing to check independence of variable
 
 ```{r, results='markup'}
 chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
@@ -492,7 +510,9 @@ print(chitest_glucose_group)
 print("For up sampled dataset")
 chisquare_for_dataset(cleanData)
 ```
-**ttest**
+
+
+### TTEST to check similarity of distributions
 ```{r, results='markup'}
 subset_stroke_1 = subset(cleanData, cleanData$stroke == 1)
 subset_stroke_0 = subset(cleanData, cleanData$stroke == 0)
