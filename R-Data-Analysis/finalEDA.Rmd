@@ -621,9 +621,6 @@ ggplot(recycleData, aes(work_type, age, color = stroke)) +
 But when comparing with age, this might be because people who have stroke in these 3 categories are older. 
 So age might be contributing to this dependence. 
 
-20)All the testing anova, chi-square
-21)Conclusion : major factor, what all other factors it depends on, (logistic regression test)
-
 
 ###Chi square Testing to check independence of variable
 
