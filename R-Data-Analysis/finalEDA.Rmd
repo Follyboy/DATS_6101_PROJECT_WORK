@@ -62,7 +62,7 @@ head(brainData)
 summary(brainData)
 ```
 
-##Q-Q Plot to check normality of Numeric Variables 
+## Q-Q Plot to check normality of Numeric Variables 
 ```{r, results='markup'}
 qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
 qqline(brainData$age)
@@ -75,11 +75,11 @@ qqline(brainData$avg_glucose_level)
 
 ```
 
-Age distribution is close to normal distribution
-BMI is close to normal distribution with few outliers 
-Average Glucose curve is not very close to normal distribution
+Age distribution is close to normal distribution\
+BMI is close to normal distribution with few outliers\
+Average Glucose curve is not very close to normal distribution\
 
-Since most of the variables our categorical, converting them to factors
+Since most of the variables are categorical, converting them to factors.\
 ```{r results='markup'}
 #Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
 brainData$gender = factor(brainData$gender)
@@ -95,12 +95,12 @@ summary(brainData)
 ```
 
 
-*We can see missing values in bmi, smoking_status \
+We can see missing values in bmi, smoking_status \
 **Class Imbalance problem** \
 we have 42617 observations for stroke = 0 and 783 observations for stroke =1 \
 \ 
 
-Checking Box Plots for visualizing numeric variables
+Checking Box Plots to visualize numeric variables
 ```{r results='markup'}
 #concise box plot for numeric variables
 plot_boxplot(brainData, by = "stroke")
@@ -109,7 +109,7 @@ plot_boxplot(brainData, by = "stroke")
 
 ### Cleaning the dataset
 
-Removing missing Values for smoking status 
+Removing missing Values from smoking status 
 ```{r results='markup'}
 cleanData = brainData
 cleanData[cleanData == ''] <- NA
@@ -194,7 +194,8 @@ When we try to upsample that difference is even more nullified \
 
 
 
-Let's check the distribution for numeric variables, bmi,age, avg_glucose_level : boxplot(outlier) and histogram(normal) => outliers **while doing avg_glucose_level and bmi => groupwise analysis as well**
+
+
 
 Making a separate column for average glucose level \
 Here as we can see, people who have diabetes are more likely to get stroke.
@@ -243,6 +244,7 @@ table(cleanData$stroke)
 ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
   geom_boxplot()
 ```
+
 With the boxplot above, subjects who have stroke has slightly lower BMI than subjects who did not have stroke. 
 
 ```{r, results='markup'}
@@ -254,6 +256,7 @@ ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill = stroke, color
        y = "BMI") +
   scale_fill_brewer(palette = "Paired")
 ```
+
 From the box plots above, there is no strong evidence of subjects having stroke with respect to BMI and gender.
 
 
@@ -329,9 +332,10 @@ geom_density(alpha = 0.4) +
 geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
 labs(title = "Age Density", x = "Age", y = "Density")
 ```
-#Age vs stroke 
+### Age vs stroke 
 
-#are bmi and glucose level related
+**are bmi and glucose level related?**\
+
 **BMI and Glucose Level Correlation**
 From the graphs below we can say that people with high bmi also have 
 ```{r results='markup'}
@@ -354,8 +358,9 @@ ggplot(cleanData, aes(x = glucoseGroup, y = bmi)) +
   theme_classic()
 ```
 
-#Age vs stroke 
-People who are older are more prone to getting stroke
+### Age vs stroke 
+
+People who are older are more prone to getting stroke\
 ```{r results='markup'}
 get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
   return(data.frame(
@@ -377,9 +382,9 @@ ggplot(cleanData, aes(x = stroke, y = age, fill = stroke)) +
 
 ```
 
-#are bmi and glucose level related
-**BMI and Glucose Level Correlation**
-From the graphs below we can say that people with high bmi also have 
+**are bmi and glucose level related?**\
+**BMI and Glucose Level Correlation**\
+
 ```{r results='markup'}
 get_box_stats1 <- function(y, upper_limit = max(bmi) * 1.15) {
   return(data.frame(
@@ -423,7 +428,7 @@ ggplot(cleanData, aes(x=bmiGroup, fill=glucoseGroup)) + geom_bar(position="dodge
 
 #ggplot(cleanData, aes(x=bmi, y=avg_glucose_level, color=stroke)) + geom_point() + facet_grid(~glucoseGroup)
 ```
-As opposed to medical results as seen from above graphs, the glucoseGroups/avg_glucose_level and bmi values/ranges are not correlated for this particular dataset.
+As opposed to medical results as seen from above graphs, the glucoseGroups/avg_glucose_level and bmi values/ranges are not correlated for this particular dataset.\
 
 
 ```{r results='markup'}
@@ -435,21 +440,9 @@ cor_mat <- cor(corr_data)
 corrplot(cor_mat,method="number")
 
 ```
-As seen from the above plot, average glucose level and age are slightly correlated
 
+As seen from the above plot, average glucose level and age are slightly correlated\
 
-
-3)do plots
-4)show missing values for bmi and smoking_status
-5)filling NA for bmi
-6)removie for smoking_status 
-7)remove outliers
-8)smote
-9)plot them again : qqplot => normality  
-10) Comparison of age,bmi, avg_glucose_level to stroke
-11) correlation plot for numeric variables
-
-12) Plot correlation matrix for categorical variables 
 
 **Data Analysis for Residence Type**
 ```{r results='markup'}
@@ -471,7 +464,7 @@ recycleData <- select(cleanData, -c('Residence_type'))
 head(recycleData)
 
 ```
-* From the plots above for residence types, we notice that residence type has no effect at all on strokes. Thsi is why we are dropping the residence column, there is no use for it in our data analysis. 
+ From the plots above for residence types, we notice that residence type has no effect at all on strokes. Thsi is why we are dropping the residence column, there is no use for it in our data analysis. \
 
 ### Data Analysis for Heart Disease
 
@@ -491,7 +484,8 @@ ggplot(recycleData, aes(heart_disease, age, color = stroke)) +
   ggtitle("Distribution for age vs heart_disease on stroke")
 ```
  
-* After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
+
+ After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.\
 
 **Data Analysis for Hypertension**
 
@@ -516,8 +510,8 @@ ggplot(recycleData, aes(hypertension, age, color = stroke)) +
 ```
 
 
-As we can see from the graph that the number of hypertension cases increases with the age due to multiple biological factors.
-From the above charts, we see that the number of strokes is correlated to the hypertension status of the subject. But hypertension is in-turn correlated to age.
+As we can see from the graph that the number of hypertension cases increases with the age due to multiple biological factors.\
+From the above charts, we see that the number of strokes is correlated to the hypertension status of the subject. But hypertension is in-turn correlated to age.\
 
 
 ### Data Analysis for Ever Married
@@ -543,7 +537,7 @@ ggplot(recycleData, aes(ever_married, age, color = stroke)) +
   ggtitle("Distribution for age vs ever_married on stroke")
 ```
 
-* From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
+ From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.\
 
 
 ### Data Analysis for Smoking Status
@@ -566,7 +560,8 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
   ggtitle("Distribution for smoking_status on stroke")
 ```
 
-* After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
+
+ After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.\
 
 
 **Data Analysis for Gender**
@@ -592,7 +587,7 @@ ggplot(recycleData, aes(gender, age, color = stroke)) +
 
 ```
 
-* The plots we see above indicates that if we are looking at gender alone as a factor for strokes, males are more likely to get strokes that females but this does not really prove to be a strong effect on stroke. We then plot gender with age against strokes and notice the same result we have been getting, all evidence point to age i.e Age is a huge factor to determining if an individual is prone to stroke. 
+\ The plots we see above indicates that if we are looking at gender alone as a factor for strokes, males are more likely to get strokes that females but this does not really prove to be a strong effect on stroke. We then plot gender with age against strokes and notice the same result we have been getting, all evidence point to age i.e Age is a huge factor to determining if an individual is prone to stroke. \
 
 ### Data Analysis for Work Type
 
@@ -617,12 +612,13 @@ ggplot(recycleData, aes(work_type, age, color = stroke)) +
 
 ```
 
-* From the box plot people with govt_job, private and self-employed are more likely to get heart stroke. 
-But when comparing with age, this might be because people who have stroke in these 3 categories are older. 
-So age might be contributing to this dependence. 
+
+ From the box plot people with govt_job, private and self-employed are more likely to get heart stroke.\ 
+But when comparing with age, this might be because people who have stroke in these 3 categories are older.\
+So age might be contributing to this dependence. \
 
 
-###Chi square Testing to check independence of variable
+### Chi square Testing to check independence of variable
 
 ```{r, results='markup'}
 chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
@@ -700,4 +696,9 @@ Pvalue is not small so we cannot reject the NULL hypothesis. So BMI with stroke 
 *NULL hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are same i.e. same distributions.\
 *Alternate Hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are different i.e. different distributions.\
 Pvalue is very small so we can reject the NULL hypothesis. So glucose levels with stroke and glucose levels without stroke have different distributions.\
+
+
+### Conclusion
+Age, heart disease, hypertension, average glucose level are very significant factors in diagnosing brain stroke in humans as per our data.\
+Few factors such as residence status and BMI levels do not contribute much to the brain stroke according to the plots we made, but as per medical research they can impact the stroke.\
 
