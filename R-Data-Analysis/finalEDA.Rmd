@@ -699,6 +699,11 @@ Pvalue is very small so we can reject the NULL hypothesis. So glucose levels wit
 
 
 ### Conclusion
-Age, heart disease, hypertension, average glucose level are very significant factors in diagnosing brain stroke in humans as per our data.\
-Few factors such as residence status and BMI levels do not contribute much to the brain stroke according to the plots we made, but as per medical research they can impact the stroke.\
+
+1. The risk of stroke increases with age.\
+2. People with hypertension have higher risk of getting a stroke.\
+3. People with higher average glucose levels are more prone to brain stroke.\
+4. People with heart disease have higher chance of getting a brain stroke.\
+5. Gender, marital status, worktype, residence type and BMI levels do not contribute to the brain stroke as per our dataset.\
+6. Smoking status does not have a major impact on stroke as per our dataset but there is some impact which is partly due to age.\
 
