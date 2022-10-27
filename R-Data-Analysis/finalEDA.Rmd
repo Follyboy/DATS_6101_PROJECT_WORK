@@ -444,5 +444,53 @@ So age might be contributing to this dependence.
 21)Conclusion : major factor, what all other factors it depends on, (logistic regression test)
 
 
+**Chi square Testing to check independence of variable**
+
+```{r, results='markup'}
+chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
+contable_gender = table(df$gender, df$stroke)
+contable_age = table(df$age, df$stroke)
+contable_hypertension = table(df$hypertension, df$stroke)
+contable_heart_disease = table(df$heart_disease, df$stroke)
+contable_ever_married = table(df$ever_married, df$stroke)
+contable_work_type = table(df$work_type, df$stroke)
+contable_Residence_type = table(df$Residence_type, df$stroke)
+contable_avg_glucose_level = table(df$avg_glucose_level, df$stroke)
+contable_bmi = table(df$bmi, df$stroke)
+contable_smoking_status = table(df$smoking_status, df$stroke)
+contable_glucose_group = table(df$glucoseGroup)
+
+chitest_gender = chisq.test(contable_gender)
+chitest_age = chisq.test(contable_age)
+chitest_hypertension = chisq.test(contable_hypertension)
+chitest_heart_disease = chisq.test(contable_heart_disease)
+chitest_ever_married = chisq.test(contable_ever_married)
+chitest_work_type = chisq.test(contable_work_type)
+chitest_Residence_type = chisq.test(contable_Residence_type)
+chitest_avg_glucose_level = chisq.test(contable_avg_glucose_level)
+chitest_bmi = chisq.test(contable_bmi)
+chitest_smoking_status = chisq.test(contable_smoking_status)
+chitest_glucose_group = chisq.test(contable_glucose_group)
+
+
+print(chitest_gender)
+print(chitest_age)
+print(chitest_hypertension)
+print(chitest_heart_disease)
+print(chitest_ever_married)
+print(chitest_work_type)
+print(chitest_Residence_type)
+print(chitest_avg_glucose_level)
+print(chitest_bmi)
+print(chitest_smoking_status)
+print(chitest_glucose_group)
+
+}
+```
+
+```{r, results='markup'}
+print("For up sampled dataset")
+chisquare_for_dataset(cleanData)
+```
 
 
