@@ -12,6 +12,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ```{r}
 library(tidyverse)
+install.packages("inspectdf")
 data <- data.frame(read.csv("dataset.csv"))
 
 # Extracting the variables we need from the data set
@@ -33,9 +34,15 @@ brainData$smoking_status = factor(brainData$smoking_status)
 brainData$stroke = factor(brainData$stroke)
 str(brainData)
 ```
-```{r results='markup'}
 
+```{r results='markup'}
+library(inspectdf)
+inspect_cat(brainData) %>% show_plot()
+inspect_num(brainData) %>% show_plot()
+inspect_num(brainData) %>% show_plot()
+inspect_cor(brainData) %>% show_plot()
 ```
+
 
 ```{r results='markup'}
 brainData$bmi[is.na(brainData$bmi)] <- median(brainData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
