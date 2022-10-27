@@ -382,7 +382,34 @@ After the analysis of smoking status against stroke where `0` is `No` and `1` is
 
 
 18)Gender
-19)WorkType
+
+**Data Analysis for Work Type**
+
+```{r results='markup'}
+
+ggplot(data = cleanData, mapping = aes(x = work_type, y = age)) +
+  geom_boxplot()
+
+
+select_work <- select(cleanData, c('work_type','stroke'))
+workType_effect <- select_work %>% 
+  group_by(work_type, stroke) %>% 
+  count(stroke)
+
+ggplot(workType_effect, aes(work_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Work Type on stroke")
+
+ggplot(cleanData, aes(work_type, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs work_type on stroke")
+
+```
+
+* From the box plot people with govt_job, private and self-employed are more likely to get heart stroke. 
+But when comparing with age, this might be because people who have stroke in these 3 categories are older. 
+So age might be contributing to this dependence. 
+
 20)All the testing anova, chi-square
 21)Conclusion : major factor, what all other factors it depends on, (logistic regression test)
 
