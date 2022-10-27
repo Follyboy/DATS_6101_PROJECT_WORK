@@ -382,6 +382,17 @@ labs(title = "Age Density", x = "Age", y = "Density")
 From the below graph, we can see that people who are old are more prone to getting stroke. 
 
 ```{r results='markup'}
+tempdf <- cleanData %>%
+  group_by(age, stroke) %>%
+  count(stroke)
+
+ tempdf %>%
+  ggplot(mapping = aes(x = age, y = n, color = stroke)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method = "loess", span = 0.3) +
+  labs(title = "Age Distribution of Stoke Event",
+       x = "Age", 
+       y = "Number of Observations")
 get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
   return(data.frame(
     y = 0.95 * upper_limit,
