@@ -335,13 +335,13 @@ ggplot(brainData,
        aes(x = age, 
            fill = smoking_status)) +
   geom_density(alpha = 0.4) +
-  labs(title = "avg glucose level distribution by age")
+  labs(title = "avg glucose level distribution by rank")
 
 ggplot(less_30, 
        aes(x = age, 
            fill = smoking_status)) +
   geom_density(alpha = 0.4) +
-  labs(title = "avg glucose level distribution by age for people less than 30")
+  labs(title = "avg glucose level distribution by rank")
 ```
 
 
