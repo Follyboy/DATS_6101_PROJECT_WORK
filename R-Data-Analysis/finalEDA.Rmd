@@ -707,3 +707,67 @@ Pvalue is very small so we can reject the NULL hypothesis. So glucose levels wit
 5. Gender, marital status, worktype, residence type and BMI levels do not contribute to the brain stroke as per our dataset.\
 6. Smoking status does not have a major impact on stroke as per our dataset but there is some impact which is partly due to age.\
 
+### SMART Question 1 : Do age, work type, and gender contribute to a person's smoking status, as there are unknown values in that column?
+
+**Age versus Smoking Status**
+From the below graph, we can see that unknown value of smoking status contains majority of values in age range of 0-14 
+```{r results='markup'}
+
+ggplot(brainData, 
+       aes(x = age, 
+           fill = smoking_status)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Avg glucose level distribution by age color coded by smoking status")
+
+ggplot(data = brainData, mapping = aes(y = age,x=smoking_status)) +
+  geom_boxplot() + geom_boxplot( colour="black", fill="#7777cc", outlier.colour="red", outlier.shape=8, outlier.size=2)
+
+```
+
+Based on the box plot and distribution 
+we can comment a little 
+for age group less than 14 can replace it with never smoked 
+apart from that we won't be able to replace missing values accurately based on age
+**Age versus Smoking Status color coded by worktype**
+```{r results='markup'}
+
+ggplot(brainData, aes(x = smoking_status, y = age, fill = work_type)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "red", "green","blue","yellow")) +
+  labs(title = "Age versus Smoking status color coded by work type")
+  theme_classic()
+  
+```
+
+
+From the above graph, we can fill the values less than 15 in formerly smoked (childrens) \
+For the other categories people who have never worked mostly lies in formerly smoked category \
+we cannot comment a lot on relation with private and self-employed work type
+
+So, based on above analysis, smoking status might be related to work type and we might be able to fill few values using this plot
+
+```{r results='markup'}
+ggplot(brainData, aes(x = smoking_status, y = age, fill = gender)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("pink", "blue", "green")) +
+  labs(title = "Age versus Smoking status color coded by gender")
+  theme_classic()  
+```
+
+  
+The plot of gender for male and female is almost similar for all three category. \
+There are only few entries for others, so it's not providing important relations
+
+Hence, from the above plot gender is not affecting smoking status and we cannot fill our missing values using that. 
+
+***Hypothesis Testing for finding Correlation***
+```{r results='markup'}
+aov1 = aov(age~smoking_status , cleanData)
+summary(aov1)
+```
+With the p-value <2e-16, we can see that smoking_status and age are related 
+
+Hence, the only variable slightly related to fill out the missing values is age.
+But due to Class Imbalance data
+and out of `r nrow(subset(brainData,smoking_status ==''))` Missing values `r nrow(subset(brainData,smoking_status =='' & age < 14))` being children, we will directly drop the unknown values rows. 
+
