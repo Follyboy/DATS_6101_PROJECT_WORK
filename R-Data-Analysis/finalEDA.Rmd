@@ -412,6 +412,24 @@ ggplot(cleanData, aes(x = stroke, y = age, fill = stroke)) +
   theme_classic()
 
 ```
+
+### Checking Normality after Data Cleaning 
+As seen from below graph, average glucose level and bmi are close to Normal Distribution now 
+
+```{r results='markup'}
+## Q-Q Plot to check normality of Numeric Variables 
+
+qqnorm(cleanData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
+qqline(cleanData$age)
+
+qqnorm(cleanData$bmi, main="Q-Q plot of bmi", col="green", ylab="bmi quantiles")
+qqline(cleanData$bmi)
+
+qqnorm(cleanData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="red", ylab="avg_glucose_level quantiles")
+qqline(cleanData$avg_glucose_level)
+
+```
+
 ### Checking Correlation between Numeric Variables
 ```{r results='markup'}
 
