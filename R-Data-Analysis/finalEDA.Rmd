@@ -415,7 +415,6 @@ As seen from the above plot, average glucose level and age are slightly correlat
 11) correlation plot for numeric variables
 
 12) Plot correlation matrix for categorical variables 
-13) analysis of residence_type and drop it 
 
 **Data Analysis for Residence Type**
 ```{r results='markup'}
