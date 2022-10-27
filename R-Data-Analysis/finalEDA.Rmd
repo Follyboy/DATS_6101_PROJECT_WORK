@@ -336,6 +336,7 @@ ggplot(brainData, aes(heart_disease, age, color = stroke)) +
  
 * After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.
 
+**Data Analysis for Hypertension**
 
 ```{r, results='markup'}
 
@@ -411,7 +412,29 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
 After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
 
 
-18)Gender
+**Data Analysis for Gender**
+
+```{r results='markup'}
+
+ggplot(data = cleanData, mapping = aes(x = gender, y = age)) +
+  geom_boxplot()
+
+
+select_gender <- select(cleanData, c('gender','stroke'))
+gender_effect <- select_gender %>% 
+  group_by(gender, stroke) %>% 
+  count(stroke)
+
+ggplot(gender_effect, aes(gender, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Gender on stroke")
+
+ggplot(cleanData, aes(gender, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs gender on stroke")
+
+```
+* The plots we see above indicates that if we are looking at gender alone as a factor for strokes, males are more likely to get strokes that females but this does not really prove to be a strong effect on stroke. We then plot gender with age against strokes and notice the same result we have been getting, all evidence point to age i.e Age is a huge factor to determining if an individual is prone to stroke. 
 
 **Data Analysis for Work Type**
 
