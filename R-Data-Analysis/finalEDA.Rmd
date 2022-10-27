@@ -762,15 +762,6 @@ Pvalue is not small so we cannot reject the NULL hypothesis. So BMI with stroke 
 Pvalue is very small so we can reject the NULL hypothesis. So glucose levels with stroke and glucose levels without stroke have different distributions.\
 
 
-### Conclusion
-
-1. The risk of stroke increases with age.\
-2. People with hypertension have higher risk of getting a stroke.\
-3. People with higher average glucose levels are more prone to brain stroke.\
-4. People with heart disease have higher chance of getting a brain stroke.\
-5. Gender, marital status, worktype, residence type and BMI levels do not contribute to the brain stroke as per our dataset.\
-6. Smoking status does not have a major impact on stroke as per our dataset but there is some impact which is partly due to age.\
-
 ### SMART Question 1 : Do age, work type, and gender contribute to a person's smoking status, as there are unknown values in that column?
 
 **Age versus Smoking Status**
@@ -835,3 +826,11 @@ Hence, the only variable slightly related to fill out the missing values is age.
 But due to Class Imbalance data
 and out of `r nrow(subset(brainData,smoking_status ==''))` Missing values `r nrow(subset(brainData,smoking_status =='' & age < 14))` being children, we will directly drop the unknown values rows. 
 
+### Conclusion
+
+1. The risk of stroke increases with age.\
+2. People with hypertension have higher risk of getting a stroke.\
+3. People with higher average glucose levels are more prone to brain stroke.\
+4. People with heart disease have higher chance of getting a brain stroke.\
+5. Gender, marital status, worktype, residence type and BMI levels do not contribute to the brain stroke as per our dataset.\
+6. Smoking status does not have a major impact on stroke as per our dataset but there is some impact which is partly due to age.\
