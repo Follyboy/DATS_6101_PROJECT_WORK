@@ -415,18 +415,43 @@ As seen from the above plot, average glucose level and age are slightly correlat
 11) correlation plot for numeric variables
 
 12) Plot correlation matrix for categorical variables 
-13) analysis of residence_type and drop it 
-14)Heart Disease: variable + age 
+
+**Data Analysis for Residence Type**
+```{r results='markup'}
+select_res <- select(cleanData, c('Residence_type','stroke'))
+
+res_effect <- select_res %>% 
+  group_by(Residence_type, stroke) %>% 
+  count(stroke)
+
+ggplot(res_effect, aes(Residence_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for residence areas on stroke")
+
+ggplot(cleanData, aes(Residence_type, age, color = stroke)) +
+  geom_boxplot() +
+  ggtitle("Distribution for age vs residene areas on stroke")
+
+recycleData <- select(cleanData, -c('Residence_type'))
+head(recycleData)
+
+```
+* From the plots above for residence types, we notice that residence type has no effect at all on strokes. Thsi is why we are dropping the residence column, there is no use for it in our data analysis. 
 
 **Data Analysis for Heart Disease**
 
 ```{r results='markup'}
-select_heart_disease <- select(cleanData, c('heart_disease','stroke'))
-heart_effect <- select_heart_disease %>% group_by(heart_disease, stroke) %>% count(stroke)
+select_heart_disease <- select(recycleData, c('heart_disease','stroke'))
+
+heart_effect <- select_heart_disease %>%
+  group_by(heart_disease, stroke) %>% 
+  count(stroke)
+
 ggplot(heart_effect, aes(heart_disease, n, fill = stroke)) + 
   geom_bar(stat = 'identity', position='fill') + 
   ggtitle("Distribution for heart disease on stroke")
-ggplot(brainData, aes(heart_disease, age, color = stroke)) + 
+
+ggplot(recycleData, aes(heart_disease, age, color = stroke)) + 
   geom_boxplot() + 
   ggtitle("Distribution for age vs heart_disease on stroke")
 ```
@@ -437,7 +462,7 @@ ggplot(brainData, aes(heart_disease, age, color = stroke)) +
 
 ```{r, results='markup'}
 
-df_hypertension_stroke <- cleanData %>%
+df_hypertension_stroke <- recycleData %>%
   group_by(hypertension, stroke) %>%
   count(stroke)
 
@@ -449,7 +474,7 @@ ggplot(mapping = aes(x = hypertension, y = n, fill = factor(stroke))) +
        y = "Percentage") +
   scale_fill_brewer(palette = "Paired")
 
-ggplot(cleanData, aes(hypertension, age, color = stroke)) + 
+ggplot(recycleData, aes(hypertension, age, color = stroke)) + 
   geom_boxplot() + 
   ggtitle("Distribution for age vs hypertension on stroke")
 
@@ -464,10 +489,10 @@ From the above charts, we see that the number of strokes is correlated to the hy
 
 ```{r results='markup'}
 
-ggplot(data = cleanData, mapping = aes(x = ever_married, y = age)) +
+ggplot(data = recycleData, mapping = aes(x = ever_married, y = age)) +
   geom_boxplot()
 
-select_married <- select(cleanData, c('ever_married','stroke'))
+select_married <- select(recycleData, c('ever_married','stroke'))
 
 married_effect <- 
   select_married %>% 
@@ -478,7 +503,7 @@ ggplot(married_effect, aes(ever_married, n, fill = stroke)) +
   geom_bar(stat = 'identity', position='fill') + 
   ggtitle("Distribution for Marriage Status on stroke")
 
-ggplot(cleanData, aes(ever_married, age, color = stroke)) + 
+ggplot(recycleData, aes(ever_married, age, color = stroke)) + 
   geom_boxplot() + 
   ggtitle("Distribution for age vs ever_married on stroke")
 ```
@@ -489,7 +514,7 @@ ggplot(cleanData, aes(ever_married, age, color = stroke)) +
 **Data Analysis for Smoking Status**
 
 ```{r results='markup'}
-no_na_for_smoking_status <- subset(cleanData, !is.na(smoking_status))
+no_na_for_smoking_status <- subset(recycleData, !is.na(smoking_status))
 
 ggplot(no_na_for_smoking_status, aes(smoking_status, age, color = stroke)) + 
   geom_boxplot() + 
@@ -506,18 +531,18 @@ ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) +
   ggtitle("Distribution for smoking_status on stroke")
 ```
 
-After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
+* After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.
 
 
 **Data Analysis for Gender**
 
 ```{r results='markup'}
 
-ggplot(data = cleanData, mapping = aes(x = gender, y = age)) +
+ggplot(data = recycleData, mapping = aes(x = gender, y = age)) +
   geom_boxplot()
 
 
-select_gender <- select(cleanData, c('gender','stroke'))
+select_gender <- select(recycleData, c('gender','stroke'))
 gender_effect <- select_gender %>% 
   group_by(gender, stroke) %>% 
   count(stroke)
@@ -526,22 +551,23 @@ ggplot(gender_effect, aes(gender, n, fill = stroke)) +
   geom_bar(stat = 'identity', position='fill') + 
   ggtitle("Distribution for Gender on stroke")
 
-ggplot(cleanData, aes(gender, age, color = stroke)) + 
+ggplot(recycleData, aes(gender, age, color = stroke)) + 
   geom_boxplot() + 
   ggtitle("Distribution for age vs gender on stroke")
 
 ```
+
 * The plots we see above indicates that if we are looking at gender alone as a factor for strokes, males are more likely to get strokes that females but this does not really prove to be a strong effect on stroke. We then plot gender with age against strokes and notice the same result we have been getting, all evidence point to age i.e Age is a huge factor to determining if an individual is prone to stroke. 
 
 **Data Analysis for Work Type**
 
 ```{r results='markup'}
 
-ggplot(data = cleanData, mapping = aes(x = work_type, y = age)) +
+ggplot(data = recycleData, mapping = aes(x = work_type, y = age)) +
   geom_boxplot()
 
 
-select_work <- select(cleanData, c('work_type','stroke'))
+select_work <- select(recycleData, c('work_type','stroke'))
 workType_effect <- select_work %>% 
   group_by(work_type, stroke) %>% 
   count(stroke)
@@ -550,7 +576,7 @@ ggplot(workType_effect, aes(work_type, n, fill = stroke)) +
   geom_bar(stat = 'identity', position='fill') + 
   ggtitle("Distribution for Work Type on stroke")
 
-ggplot(cleanData, aes(work_type, age, color = stroke)) + 
+ggplot(recycleData, aes(work_type, age, color = stroke)) + 
   geom_boxplot() + 
   ggtitle("Distribution for age vs work_type on stroke")
 
