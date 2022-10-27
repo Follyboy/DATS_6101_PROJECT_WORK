@@ -816,7 +816,7 @@ chisquare_for_dataset(up_sample_data)
 ```{r, results='markup'}
 
 # remotes::install_github("cran/DMwR")
-library(DMwR)
+#library(DMwR)
 
 table(data_no_outlier$stroke)
 #use SMOTE to create new dataset that is more balanced
