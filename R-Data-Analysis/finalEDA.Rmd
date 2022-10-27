@@ -38,6 +38,7 @@ library(dplyr)
 library(DMwR)
 library(SmartEDA) 
 library(DataExplorer)
+library(tidyverse)
 library("corrplot")
 ``` 
 
@@ -361,6 +362,8 @@ As seen above, average glucose level or diabetic level of sugar is impacting the
 The difference is huge for Diabetic Category \
 So as seen from above graphs, glucose level is having direct impact on stroke.\
 
+
+
 ### Age Analysis 
 
 **Age Distribution**
@@ -510,6 +513,14 @@ ggplot(cleanData, aes(x=age, y=bmi, color=stroke)) + geom_point()+
     labs(title = "BMI verus Age based on Gender")
 ```
 No strong relation is observed from the scatter plot as well
+
+
+### Correlation matrix for categorical variables
+```{r, results='markup'}
+df_character <- select_if(cleanData, is.factor)
+#head(df_character)
+plot_correlation(df_character)
+```
 
 ### Residence Type
 **Data Analysis for Residence Type**
