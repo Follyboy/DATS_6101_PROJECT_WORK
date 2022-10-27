@@ -62,6 +62,23 @@ head(brainData)
 summary(brainData)
 ```
 
+##Q-Q Plot to check normality of Numeric Variables 
+```{r, results='markup'}
+qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
+qqline(brainData$age)
+
+qqnorm(brainData$bmi, main="Q-Q plot of bmi", col="green", ylab="bmi quantiles")
+qqline(brainData$bmi)
+
+qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="red", ylab="avg_glucose_level quantiles")
+qqline(brainData$avg_glucose_level)
+
+```
+
+Age distribution is close to normal distribution
+BMI is close to normal distribution with few outliers 
+Average Glucose curve is not very close to normal distribution
+
 Since most of the variables our categorical, converting them to factors
 ```{r results='markup'}
 #Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
