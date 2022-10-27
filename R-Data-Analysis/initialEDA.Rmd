@@ -777,6 +777,8 @@ contable_Residence_type = table(df$Residence_type, df$stroke)
 contable_avg_glucose_level = table(df$avg_glucose_level, df$stroke)
 contable_bmi = table(df$bmi, df$stroke)
 contable_smoking_status = table(df$smoking_status, df$stroke)
+contable_bmi_group = table(df$bmiGroup, df$stroke)
+
 
 chitest_gender = chisq.test(contable_gender)
 chitest_age = chisq.test(contable_age)
@@ -788,7 +790,7 @@ chitest_Residence_type = chisq.test(contable_Residence_type)
 chitest_avg_glucose_level = chisq.test(contable_avg_glucose_level)
 chitest_bmi = chisq.test(contable_bmi)
 chitest_smoking_status = chisq.test(contable_smoking_status)
-
+chitest_bmi_group = chisq.test(contable_bmi_group)
 
 print(chitest_gender)
 print(chitest_age)
@@ -800,7 +802,7 @@ print(chitest_Residence_type)
 print(chitest_avg_glucose_level)
 print(chitest_bmi)
 print(chitest_smoking_status)
-
+print(chitest_bmi_group)
 }
 ```
 
@@ -918,3 +920,17 @@ ggplot(balanced_df, aes(ever_married, age, color = stroke)) +
 
 * From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.
 
+**ttest**
+```{r, results='markup'}
+subset_stroke_1 = subset(balanced_df, balanced_df$stroke == 1)
+subset_stroke_0 = subset(balanced_df, balanced_df$stroke == 0)
+
+
+ttest2sample_age = t.test(subset_stroke_1$age, subset_stroke_0$age)
+ttest2sample_bmi = t.test(subset_stroke_1$bmi, subset_stroke_0$bmi)
+ttest2sample_glucose = t.test(subset_stroke_1$avg_glucose_level, subset_stroke_0$avg_glucose_level)
+
+ttest2sample_age
+ttest2sample_bmi
+ttest2sample_glucose
+```
