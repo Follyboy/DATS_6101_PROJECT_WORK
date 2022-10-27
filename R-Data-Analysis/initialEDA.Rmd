@@ -138,6 +138,7 @@ qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="b
 qqline(brainData$avg_glucose_level)
 
 ```
+
 ```{r, results='markup'}
 summary(brainData)
 ```
