@@ -285,6 +285,7 @@ geom_density() +
 geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
 labs(title = "Age Density", x = "Age", y = "Density")
 ```
+
 ```{r, results='markup'}
 ggplot(cleanData, aes(x = age, fill = gender)) +
 geom_density(alpha = 0.4) +
@@ -293,6 +294,60 @@ labs(title = "Age Density", x = "Age", y = "Density")
 ```
 
 
+#Age vs stroke 
+People who are older are more prone to getting stroke
+```{r results='markup'}
+get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = stroke, y = age, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+```
+
+#are bmi and glucose level related
+**BMI and Glucose Level Correlation**
+From the graphs below we can say that people with high bmi also have 
+```{r results='markup'}
+get_box_stats1 <- function(y, upper_limit = max(bmi) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = glucoseGroup, y = bmi)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+ggplot(cleanData, aes(x = glucoseGroup, y = bmi, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+cleanData$bmiGroup=cut(cleanData$bmi, c(0, 18.5, 24.9, 29.9,Inf), c("Underweight", "Healthy", "Overweight","Obese"), include.lowest=TRUE)
+```
 
 ```{r results='markup'}
 
