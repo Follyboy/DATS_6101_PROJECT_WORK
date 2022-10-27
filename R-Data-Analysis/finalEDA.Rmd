@@ -445,7 +445,7 @@ As seen from the above plot, average glucose level and age are slightly correlat
 
 
 
-###SMART Question 3 : Are glucose levels, and BMI correlated to each other?
+### SMART Question 3 : Are glucose levels, and BMI correlated to each other?
 
 **BMI and Glucose Level Correlation**
 The box plot are similar for the three glucose groups, so Not much correlation is observed. 
@@ -522,7 +522,7 @@ ggplot(res_effect, aes(Residence_type, n, fill = stroke)) +
 
 ggplot(cleanData, aes(Residence_type, age, color = stroke)) +
   geom_boxplot() +
-  ggtitle("Distribution for age vs residene areas on stroke")
+  ggtitle("Distribution for age vs residence areas on stroke")
 
 recycleData <- select(cleanData, -c('Residence_type'))
 head(recycleData)
