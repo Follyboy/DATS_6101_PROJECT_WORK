@@ -96,8 +96,14 @@ summary(brainData)
 
 
 We can see missing values in bmi, smoking_status \
-**Class Imbalance problem** \
-we have 42617 observations for stroke = 0 and 783 observations for stroke =1 \
+\
+We observe that the number of observation with stroke =0 are `nrow(subset(brainData),brainData$stroke==0)` and for stroke =1 as `nrow(subset(brainData),brainData$stroke==1)`.\
+The difference is huge and this is known as **Class Imbalance Problem**
+
+### Class Imbalance 
+Unequal distribution of data might result in inaccurate calculations for accuracy and thus we need to balance our dataset before proceeding further. \
+So we wil remove the missing values and then use Sampling Techniques to balance our dataset.\
+
 \ 
 
 Checking Box Plots to visualize numeric variables
@@ -107,7 +113,7 @@ plot_boxplot(brainData, by = "stroke")
 
 ```
 
-### Cleaning the dataset
+### Cleaning the dataset : Smoking Status, Gender, BMI
 
 Removing missing Values from smoking status 
 ```{r results='markup'}
@@ -120,6 +126,7 @@ nrow(cleanData)
 ```{r, results='markup'}
 table(cleanData$gender)
 ```
+
 Since other gender entries are very less, we will just drop the other rows.
 
 ```{r, results='markup'}
@@ -169,7 +176,7 @@ cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replaci
 summary(cleanData)
 ```
 
-### Removing outliers
+### Removing outliers : BMI
 Removing Outliers for BMI 
 ```{r results='markup'}
 
@@ -187,18 +194,16 @@ cleanData <- subset(cleanData, cleanData$bmi > Lower_bmi & cleanData$bmi < Upper
 
 dim(cleanData)
 ```
+
+**Outliers for Age and Average Glucose Level**\
 We won't be removing Outliers for Age and Average level because\
 1) max value of age is 82, so nothing is unusual about that \
 2)avg_glucose_level is losing the relationship with stroke if we remove the outliers \
 When we try to upsample that difference is even more nullified \
 
-
-
-
-
-
+**Average Glucose Level into 3 Diabetic Group**
 Making a separate column for average glucose level \
-Here as we can see, people who have diabetes are more likely to get stroke.
+Here as we can see, **people who have diabetes are more likely to get stroke.**\
 
 ```{r results='markup'}
 cleanData$glucoseGroup=cut(cleanData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
@@ -225,9 +230,11 @@ ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
 ```
 
 
-### Upsampling of data
-```{r results='markup'}
+### Synthetic Minority Over-Sampling Technique(SMOTE): Upsampling of data \
 
+SMOTE is an intelligent upsampling technique that focuses on creating the new entries along the lines of a randomly chosen point and its nearest neighbors(to avoid overfitting). This is better than blindly duplicating values since it gives some variation as well.
+
+```{r results='markup'}
 table(cleanData$stroke)
 #use SMOTE to create new dataset that is more balanced
 cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
@@ -245,7 +252,12 @@ ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
   geom_boxplot()
 ```
 
-With the boxplot above, subjects who have stroke has slightly lower BMI than subjects who did not have stroke. 
+The above box plot is not giving us anything concrete about stroke prediction. Since for both distributions with and without stroke, the average BMI is almost similar. \
+The 3rd Quartile value for stroke = 1 is slightly less which contradicts the medical results that high BMI people are more prone to getting Stroke. 
+
+### BMI versus stroke for different Genders
+
+Distribution for both the Gender is still similar only for BMI.
 
 ```{r, results='markup'}
 
@@ -262,11 +274,37 @@ From the box plots above, there is no strong evidence of subjects having stroke 
 
 ### Glucose level analysis
 **Average Glucose Level**
-As seen from below graph, even though before upsampling data the higher value of glucose level were contributing to the chances of stroke i.e stroke = 1.
 
-Average Glucose Level after upsampling
+Here, when we tried to remove outliers and upsample our data, because of only 400 values for stroke = 1 and less variation the relationship which was present before upsampling the data was lost due to outlier removal.\
+**Important Observation while Sampling**
+Hence removing outliers without checking the max values and there meaning is not always a good idea. We should make sure that the
+meaning of distribution is not lost. \
+We made sure that the relationships before and after Sampling the data are intact.\
+
+Secondly, since glucoseGroup was formed based on avg_glucose_level, SMOTE being unaware of the cutoffs for Normal, Prediabetes and Diabetes didn't provided the expected results. So, we will divide the data again into the 3 categories for our analysis.
+
+
+Since Upsampling is done, we can now remove the outliers
+```{r results='asis'}
+
+dim(cleanData)
+quartiles_glucose <- quantile(cleanData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
+IQR_glucose <- IQR(cleanData$avg_glucose_level)
+
+ 
+Lower_glucose <- quartiles_glucose[1] - 1.5*IQR_glucose
+Upper_glucose <- quartiles_glucose[2] + 1.5*IQR_glucose
+
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+cleanData <- subset(cleanData, cleanData$avg_glucose_level > Lower_glucose & cleanData$avg_glucose_level < Upper_glucose)
+
+dim(cleanData)
+```
+
 
 ```{r results='markup'}
+#new values for glucose groups were gene
 cleanData$glucoseGroup=cut(cleanData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
 df_glucose <- cleanData %>%
   group_by(glucoseGroup, stroke) %>%
@@ -276,14 +314,14 @@ df_glucose <- cleanData %>%
 df_glucose %>%
 ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
   geom_bar(stat = "identity", position = "fill") +
-  labs(title = "Percentage of subjects with Different Glucose Level", 
+  labs(title = "Percentage of oberservation having stroke based on different Glucose Level", 
        x = "glucoseGroup", 
        y = "Percentage") +
   scale_fill_brewer(palette = "Paired")
 ```
 
+**Glucose Level versus Stroke**
 
-After Upsampling the relationship is lost. 
 ```{r results='markup'}
 get_box_stats <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.15) {
   return(data.frame(
@@ -298,7 +336,7 @@ get_box_stats <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.
 
 ggplot(cleanData, aes(x = stroke, y = avg_glucose_level, fill = stroke)) +
   geom_boxplot() +
-  labs(title = "avg glucose level distribution before sampling")+
+  labs(title = "Average Glucose Level versus Stroke")+
   scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
   stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
   theme_classic()
@@ -316,15 +354,22 @@ ExpCatViz(
 ```
 
 As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
-The difference is huge for Diabetic Category
+The difference is huge for Diabetic Category \
+So as seen from above graphs, glucose level is having direct impact on stroke.\
 
+### Age Analysis 
 
+**Age Distribution**
 ```{r, results='markup'}
 ggplot(cleanData, aes(x = age)) +
 geom_density() +
 geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
 labs(title = "Age Density", x = "Age", y = "Density")
 ```
+**Distribution of Age for the two Genders Male and Female**
+Since age could differ around the two genders, and our analysis could only be dependent on age.\
+We will compare the age distribution for Male and Female. \ 
+And as observed from the below graph distribution for Male and Female is similar 
 
 ```{r, results='markup'}
 ggplot(cleanData, aes(x = age, fill = gender)) +
@@ -334,33 +379,8 @@ labs(title = "Age Density", x = "Age", y = "Density")
 ```
 ### Age vs stroke 
 
-**are bmi and glucose level related?**\
+From the below graph, we can see that people who are old are more prone to getting stroke. 
 
-**BMI and Glucose Level Correlation**
-From the graphs below we can say that people with high bmi also have 
-```{r results='markup'}
-get_box_stats1 <- function(y, upper_limit = max(bmi) * 1.15) {
-  return(data.frame(
-    y = 0.95 * upper_limit,
-    label = paste(
-      "Count =", length(y), "\n",
-      "Mean =", round(mean(y), 2), "\n",
-      "Median =", round(median(y), 2), "\n"
-    )
-  ))
-}
-
-ggplot(cleanData, aes(x = glucoseGroup, y = bmi)) +
-  geom_boxplot() +
-  labs(title = "avg glucose level distribution before sampling")+
-  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
-  stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
-  theme_classic()
-```
-
-### Age vs stroke 
-
-People who are older are more prone to getting stroke\
 ```{r results='markup'}
 get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
   return(data.frame(
@@ -375,16 +395,31 @@ get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
 
 ggplot(cleanData, aes(x = stroke, y = age, fill = stroke)) +
   geom_boxplot() +
-  labs(title = "avg glucose level distribution before sampling")+
+  labs(title = "Age verus Stroke")+
   scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
   stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
   theme_classic()
 
 ```
+### Checking Correlation between Numeric Variables
+```{r results='markup'}
 
-**are bmi and glucose level related?**\
-**BMI and Glucose Level Correlation**\
+#correlation
 
+corr_data <- select_if(cleanData, is.numeric)
+cor_mat <- cor(corr_data)
+corrplot(cor_mat,method="number")
+
+```
+
+As seen from the above plot, average glucose level and age are slightly correlated\
+
+
+
+###SMART Question 3 : Are glucose levels, and BMI correlated to each other?
+
+**BMI and Glucose Level Correlation**
+The box plot are similar for the three glucose groups, so Not much correlation is observed. 
 ```{r results='markup'}
 get_box_stats1 <- function(y, upper_limit = max(bmi) * 1.15) {
   return(data.frame(
@@ -403,6 +438,10 @@ ggplot(cleanData, aes(x = glucoseGroup, y = bmi)) +
   scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
   stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
   theme_classic()
+```
+
+
+```{r results='markup'}
 
 
 ggplot(cleanData, aes(x = glucoseGroup, y = bmi, fill = stroke)) +
@@ -428,20 +467,16 @@ ggplot(cleanData, aes(x=bmiGroup, fill=glucoseGroup)) + geom_bar(position="dodge
 
 #ggplot(cleanData, aes(x=bmi, y=avg_glucose_level, color=stroke)) + geom_point() + facet_grid(~glucoseGroup)
 ```
-As opposed to medical results as seen from above graphs, the glucoseGroups/avg_glucose_level and bmi values/ranges are not correlated for this particular dataset.\
+As opposed to medical results as seen from above graphs, the glucoseGroups/avg_glucose_level and bmi values/ranges are not correlated for this particular dataset as observed from the graph.\
+\
+Correlation value using pearson test : $0.13$
 
-
+Scatter Plot for BMI and Average Glucose Level
 ```{r results='markup'}
-
-#correlation
-
-corr_data <- select_if(cleanData, is.numeric)
-cor_mat <- cor(corr_data)
-corrplot(cor_mat,method="number")
-
+ggplot(cleanData, aes(x=age, y=bmi, color=stroke)) + geom_point()+
+    labs(title = "BMI verus Age based on Gender")
 ```
-
-As seen from the above plot, average glucose level and age are slightly correlated\
+No strong relation is observed from the scatter plot as well
 
 
 **Data Analysis for Residence Type**
