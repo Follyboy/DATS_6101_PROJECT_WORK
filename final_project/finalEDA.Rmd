@@ -1,0 +1,852 @@
+---
+title: "Cerebral Stroke Diagnosis based on physiological Factors"
+author: "TEAM 6"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+# Exploratory data analysis
+
+## Cerebral stroke diagnosis dataset
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Importing all the relevant packages 
+
+```{r results='markup'}
+#install packages
+#remotes::install_github("cran/DMwR")
+#install.packages("moments")
+#install.packages("DataExplorer")
+
+#import libraries all
+library(ggplot2)
+library(moments)
+library(dplyr)
+library(DMwR)
+library(SmartEDA) 
+library(DataExplorer)
+library(tidyverse)
+library("corrplot")
+``` 
+
+### Importing our dataset
+```{r results='markup'}
+#importing brain dataset
+data <- data.frame(read.csv("dataset.csv"))
+
+
+#checking the structure of our dataset 
+str(data)
+
+#since ID won't be useful during prediction so removing that 
+brainData <- select(data, -c('id'))
+
+#checking top5 entries in our dataset 
+head(brainData)
+```
+
+### Data Analysing
+### Checking the summary of our dataset
+```{r results='markup'}
+summary(brainData)
+```
+
+
+### Q-Q Plot to check normality of Numeric Variables 
+```{r, results='markup'}
+qqnorm(brainData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
+qqline(brainData$age)
+
+qqnorm(brainData$bmi, main="Q-Q plot of bmi", col="green", ylab="bmi quantiles")
+qqline(brainData$bmi)
+
+qqnorm(brainData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="red", ylab="avg_glucose_level quantiles")
+qqline(brainData$avg_glucose_level)
+
+```
+
+Age distribution is close to normal distribution\
+BMI is close to normal distribution with few outliers\
+Average Glucose curve is not very close to normal distribution\
+
+### Converting Categorical Variables  to Factors
+Since most of the variables are categorical, converting them to factors.\
+```{r results='markup'}
+#Converting gender,hypertension,heart_disease,ever_married,work_type,Residence_type,smoking_status,stroke to factors
+brainData$gender = factor(brainData$gender)
+brainData$hypertension = factor(brainData$hypertension)
+brainData$heart_disease = factor(brainData$heart_disease)
+brainData$ever_married = factor(brainData$ever_married)
+brainData$work_type = factor(brainData$work_type)
+brainData$Residence_type = factor(brainData$Residence_type)
+brainData$smoking_status = factor(brainData$smoking_status)
+brainData$stroke = factor(brainData$stroke)
+str(brainData)
+summary(brainData)
+```
+
+
+We can see missing values in bmi, smoking_status \
+\
+We observe that the number of observation with stroke =0 are `nrow(subset(brainData),brainData$stroke==0)` and for stroke =1 as `nrow(subset(brainData),brainData$stroke==1)`.\
+The difference is huge and this is known as **Class Imbalance Problem**
+
+### Class Imbalance 
+Unequal distribution of data might result in inaccurate calculations for accuracy and thus we need to balance our dataset before proceeding further. \
+So we wil remove the missing values and then use Sampling Techniques to balance our dataset.\
+
+\ 
+
+Checking Box Plots to visualize numeric variables
+```{r results='markup'}
+#concise box plot for numeric variables
+plot_boxplot(brainData, by = "stroke")
+
+```
+
+### Cleaning the dataset :
+###Smoking Status, Gender, BMI
+
+Removing missing Values from smoking status 
+```{r results='markup'}
+cleanData = brainData
+cleanData[cleanData == ''] <- NA
+nrow(cleanData)
+cleanData <- subset(cleanData, !is.na(smoking_status))
+nrow(cleanData)
+```
+```{r, results='markup'}
+table(cleanData$gender)
+```
+
+Since other gender entries are very less, we will just drop the other rows.
+
+```{r, results='markup'}
+drop_others = subset(cleanData, cleanData$gender != 'Other')
+table(drop_others$gender)
+cleanData <- drop_others
+
+```
+
+
+Analysis for BMI NULL values.
+```{r, results='markup'}
+ggplot(data=brainData, aes(bmi)) +
+geom_histogram(col="black",
+fill="blue") +
+labs(x="bmi", y="frequency") +
+labs(title="plot of bmi")
+```
+```{r, results='markup'}
+tempdf <- subset(brainData, !is.na(bmi))  # removing NA values from bmi and storing it in tempdf
+density_bmi <- density(tempdf$bmi)
+plot(density_bmi)    #plotting the density curve of bmi values
+
+ggplot(data = tempdf, mapping = aes(y = bmi)) +
+  geom_boxplot() + geom_boxplot( colour="black", fill="#7777cc", outlier.colour="red", outlier.shape=8, outlier.size=2)  #plotting the boxplot for bmi values.
+```
+```{r, results='markup'}
+skewness_value <- skewness(tempdf$bmi)
+```
+Skewness value: `r skewness_value`
+
+
+From the density curve and skewness value, BMI is rightly skewed. So mean is not the right central tendency to fill NA values in BMI.
+We will NA values in BMI using median of the data.
+Note: Negative skewness value indicates left skewed and positive skewness value indicates right skewed.
+The rule of thumb seems to be:
+
+If the skewness is between -0.5 and 0.5, the data are fairly symmetrical
+If the skewness is between -1 and – 0.5 or between 0.5 and 1, the data are moderately skewed
+If the skewness is less than -1 or greater than 1, the data are highly skewed
+
+Replacing Missing Values for BMI with median.
+```{r results='markup'}
+
+#removing missing values for BMI
+cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
+summary(cleanData)
+```
+
+### Removing outliers : BMI
+Removing Outliers for BMI 
+```{r results='markup'}
+
+dim(cleanData)
+quartiles_bmi <- quantile(cleanData$bmi, probs=c(.25, .75), na.rm = FALSE)
+IQR_bmi <- IQR(cleanData$bmi)
+
+ 
+Lower_bmi <- quartiles_bmi[1] - 1.5*IQR_bmi
+Upper_bmi <- quartiles_bmi[2] + 1.5*IQR_bmi
+
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+cleanData <- subset(cleanData, cleanData$bmi > Lower_bmi & cleanData$bmi < Upper_bmi)
+
+dim(cleanData)
+```
+
+**Outliers for Age and Average Glucose Level**\
+We won't be removing Outliers for Age and Average level because\
+1) max value of age is 82, so nothing is unusual about that \
+2)avg_glucose_level is losing the relationship with stroke if we remove the outliers \
+When we try to upsample that difference is even more nullified \
+
+**Average Glucose Level into 3 Diabetic Group**
+Making a separate column for average glucose level \
+Here as we can see, **people who have diabetes are more likely to get stroke.**\
+
+```{r results='markup'}
+cleanData$glucoseGroup=cut(cleanData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+#0-114 : Normal glucose level
+#114-140 : Prediabetes
+#140- infinity : Diabetes 
+
+#glucoseGroup to stroke relations
+#ggbarstats(data=cleanData,y=glucoseGroup,x=stroke,label="both")
+#people with diabetes have a high chance of getting stroke 
+df_glucose <- cleanData %>%
+  group_by(glucoseGroup, stroke) %>%
+  count(stroke)
+#grouping data into three glucose level
+
+df_glucose %>%
+ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of subjects with Different Glucose Level", 
+       x = "glucoseGroup", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+
+```
+
+
+### Synthetic Minority Over-Sampling Technique(SMOTE): Upsampling of data \
+
+SMOTE is an intelligent upsampling technique that focuses on creating the new entries along the lines of a randomly chosen point and its nearest neighbors(to avoid overfitting). This is better than blindly duplicating values since it gives some variation as well.
+
+```{r results='markup'}
+table(cleanData$stroke)
+#use SMOTE to create new dataset that is more balanced
+cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
+#minority => 2000/100 =20 so 20*(strok1Observations=416) #upsampling 
+#200/100 =2, make the majority observation 2 time the minority observations #downsampling 
+
+#view distribution of response variable in new dataset
+table(cleanData$stroke)
+```
+
+
+### BMI analysis
+```{r, results='markup'}
+ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill=stroke)) +
+  geom_boxplot()
+```
+
+The above box plot is not giving us anything concrete about stroke prediction. Since for both distributions with and without stroke, the average BMI is almost similar. \
+The 3rd Quartile value for stroke = 1 is slightly less which contradicts the medical results that high BMI people are more prone to getting Stroke. 
+
+### BMI versus stroke for different Genders
+
+Distribution for both the Gender is still similar only for BMI.
+
+```{r, results='markup'}
+
+ggplot(data = cleanData, mapping = aes(x = stroke, y = bmi, fill = stroke, color = gender)) +
+  geom_boxplot() +
+  labs(title = "Boxplot of BMI", 
+       x = "Stroke", 
+       y = "BMI") +
+  scale_fill_brewer(palette = "Paired")
+```
+
+From the box plots above, there is no strong evidence of subjects having stroke with respect to BMI and gender.
+
+
+### Glucose level analysis
+**Average Glucose Level**
+
+Here, when we tried to remove outliers and upsample our data, because of only 400 values for stroke = 1 and less variation the relationship which was present before upsampling the data was lost due to outlier removal.\
+**Important Observation while Sampling**
+Hence removing outliers without checking the max values and there meaning is not always a good idea. We should make sure that the
+meaning of distribution is not lost. \
+We made sure that the relationships before and after Sampling the data are intact.\
+
+Secondly, since glucoseGroup was formed based on avg_glucose_level, SMOTE being unaware of the cutoffs for Normal, Prediabetes and Diabetes didn't provided the expected results. So, we will divide the data again into the 3 categories for our analysis.
+
+### Removing Outliers From Average Glucose Level
+Since Upsampling is done, we can now remove the outliers
+```{r results='asis'}
+
+dim(cleanData)
+quartiles_glucose <- quantile(cleanData$avg_glucose_level, probs=c(.25, .75), na.rm = FALSE)
+IQR_glucose <- IQR(cleanData$avg_glucose_level)
+
+ 
+Lower_glucose <- quartiles_glucose[1] - 1.5*IQR_glucose
+Upper_glucose <- quartiles_glucose[2] + 1.5*IQR_glucose
+
+#since all the missing values are for stroke =0 entries, we will directly drop it
+
+cleanData <- subset(cleanData, cleanData$avg_glucose_level > Lower_glucose & cleanData$avg_glucose_level < Upper_glucose)
+
+dim(cleanData)
+```
+
+
+```{r results='markup'}
+#new values for glucose groups were gene
+cleanData$glucoseGroup=cut(cleanData$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+df_glucose <- cleanData %>%
+  group_by(glucoseGroup, stroke) %>%
+  count(stroke)
+#grouping data into three glucose level
+
+df_glucose %>%
+ggplot(mapping = aes(x = glucoseGroup, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of oberservation having stroke based on different Glucose Level", 
+       x = "glucoseGroup", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+```
+
+**Glucose Level versus Stroke**
+
+```{r results='markup'}
+get_box_stats <- function(y, upper_limit = max(brainData$avg_glucose_level) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = stroke, y = avg_glucose_level, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "Average Glucose Level versus Stroke")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+```
+
+
+```{r results='markup'}
+
+# percent of people with and without stroke for glucose level in three categories 
+ExpCatViz(
+  cleanData %>% 
+    select(stroke, glucoseGroup), 
+  target="stroke",col=c("Blue", "red"))
+```
+
+As seen above, average glucose level or diabetic level of sugar is impacting the percentage of people with strokes and not.
+The difference is huge for Diabetic Category \
+So as seen from above graphs, glucose level is having direct impact on stroke.\
+
+
+
+### Age Analysis 
+
+**Age Distribution**
+```{r, results='markup'}
+ggplot(cleanData, aes(x = age)) +
+geom_density() +
+geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
+labs(title = "Age Density", x = "Age", y = "Density")
+```
+**Distribution of Age for the two Genders Male and Female**
+Since age could differ around the two genders, and our analysis could only be dependent on age.\
+We will compare the age distribution for Male and Female. \ 
+And as observed from the below graph distribution for Male and Female is similar 
+
+```{r, results='markup'}
+ggplot(cleanData, aes(x = age, fill = gender)) +
+geom_density(alpha = 0.4) +
+geom_vline(aes(xintercept=mean(age)), color = "blue", linetype = "dashed") +
+labs(title = "Age Density", x = "Age", y = "Density")
+```
+### Age vs stroke 
+
+From the below graph, we can see that people who are old are more prone to getting stroke. 
+
+```{r results='markup'}
+tempdf <- cleanData %>%
+  group_by(age, stroke) %>%
+  count(stroke)
+
+ tempdf %>%
+  ggplot(mapping = aes(x = age, y = n, color = stroke)) +
+  geom_point(alpha=0.5) +
+  geom_smooth(method = "loess", span = 0.3) +
+  labs(title = "Age Distribution of Stoke Event",
+       x = "Age", 
+       y = "Number of Observations")
+get_box_stats <- function(y, upper_limit = max(cleanData$age) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = stroke, y = age, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "Age verus Stroke")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+```
+
+### Checking Normality after Data Cleaning 
+As seen from below graph, average glucose level and bmi are close to Normal Distribution now 
+
+```{r results='markup'}
+## Q-Q Plot to check normality of Numeric Variables 
+
+qqnorm(cleanData$age, main="Q-Q plot of age", col="blue", ylab="age quantiles")
+qqline(cleanData$age)
+
+qqnorm(cleanData$bmi, main="Q-Q plot of bmi", col="green", ylab="bmi quantiles")
+qqline(cleanData$bmi)
+
+qqnorm(cleanData$avg_glucose_level, main="Q-Q plot of avg_glucose_level", col="red", ylab="avg_glucose_level quantiles")
+qqline(cleanData$avg_glucose_level)
+
+```
+
+### Checking Correlation between Numeric Variables
+```{r results='markup'}
+
+#correlation
+
+corr_data <- select_if(cleanData, is.numeric)
+cor_mat <- cor(corr_data)
+corrplot(cor_mat,method="number")
+
+```
+
+As seen from the above plot, average glucose level and age are slightly correlated\
+
+
+
+### SMART Question 3 : Are glucose levels, and BMI correlated to each other?
+
+**BMI and Glucose Level Correlation**
+The box plot are similar for the three glucose groups, so Not much correlation is observed. 
+```{r results='markup'}
+get_box_stats1 <- function(y, upper_limit = max(bmi) * 1.15) {
+  return(data.frame(
+    y = 0.95 * upper_limit,
+    label = paste(
+      "Count =", length(y), "\n",
+      "Mean =", round(mean(y), 2), "\n",
+      "Median =", round(median(y), 2), "\n"
+    )
+  ))
+}
+
+ggplot(cleanData, aes(x = glucoseGroup, y = bmi)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+```
+
+
+```{r results='markup'}
+
+
+ggplot(cleanData, aes(x = glucoseGroup, y = bmi, fill = stroke)) +
+  geom_boxplot() +
+  labs(title = "avg glucose level distribution before sampling")+
+  scale_fill_manual(values = c("#0099f8", "#e74c3c", "#2ecc71")) +
+  stat_summary(fun.data = get_box_stats1, geom = "text", hjust = 0.5, vjust = 0.9) +
+  theme_classic()
+
+cleanData$bmiGroup=cut(cleanData$bmi, c(0, 18.5, 24.9, 29.9,Inf), c("Underweight", "Healthy", "Overweight","Obese"), include.lowest=TRUE)
+
+
+
+#If your BMI is less than 18.5, it falls within the underweight range.
+#If your BMI is 18.5 to 24.9, it falls within the normal or Healthy Weight range.
+#If your BMI is 25.0 to 29.9, it falls within the overweight range.
+#If your BMI is 30.0 or higher, it falls within the obese range.
+
+ggplot(cleanData, aes(x=bmiGroup, fill=glucoseGroup)) + geom_bar(position="dodge")+
+  labs(title = "Count of bmi groups for different Glucose Level")
+#ggplot(cleanData, aes(x=bmi, y=avg_glucose_level, color=stroke)) + geom_point()+
+#labs(title = "Average Glucose Level versus Age color coded with stroke", x = "BMI", y = "Average Glucose Level")
+
+#ggplot(cleanData, aes(x=bmi, y=avg_glucose_level, color=stroke)) + geom_point() + facet_grid(~glucoseGroup)
+```
+As opposed to medical results as seen from above graphs, the glucoseGroups/avg_glucose_level and bmi values/ranges are not correlated for this particular dataset as observed from the graph.\
+\
+Correlation value using pearson test : $0.13$
+
+Scatter Plot for BMI and Average Glucose Level
+```{r results='markup'}
+ggplot(cleanData, aes(x=age, y=bmi, color=stroke)) + geom_point()+
+    labs(title = "BMI verus Age based on Gender")
+```
+No strong relation is observed from the scatter plot as well
+
+
+### Correlation matrix for categorical variables
+```{r, results='markup'}
+df_character <- select_if(cleanData, is.factor)
+#head(df_character)
+plot_correlation(df_character)
+```
+
+### Residence Type
+**Data Analysis for Residence Type**
+```{r results='markup'}
+select_res <- select(cleanData, c('Residence_type','stroke'))
+
+res_effect <- select_res %>% 
+  group_by(Residence_type, stroke) %>% 
+  count(stroke)
+
+ggplot(res_effect, aes(Residence_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for residence areas on stroke")
+
+ggplot(cleanData, aes(Residence_type, age, color = stroke)) +
+  geom_boxplot() +
+  ggtitle("Distribution for age vs residence areas on stroke")
+
+recycleData <- select(cleanData, -c('Residence_type'))
+head(recycleData)
+
+```
+ From the plots above for residence types, we notice that residence type has no effect at all on strokes. Thsi is why we are dropping the residence column, there is no use for it in our data analysis. \
+
+### Data Analysis for Heart Disease
+
+```{r results='markup'}
+select_heart_disease <- select(recycleData, c('heart_disease','stroke'))
+
+heart_effect <- select_heart_disease %>%
+  group_by(heart_disease, stroke) %>% 
+  count(stroke)
+
+ggplot(heart_effect, aes(heart_disease, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for heart disease on stroke")
+
+ggplot(recycleData, aes(heart_disease, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs heart_disease on stroke")
+```
+ 
+
+ After cleaning the data, the plots above predicts that heart disease might actually have an impact on stroke but age has a bigger factor on stroke. We see that an increase in age comes with an increase in heart disease. This means that people in the higher age bracket are prone to heart diseases than people in the lower age bracket, this is the relation between heart disease and age.\
+
+### Hypertension
+**Data Analysis for Hypertension**
+
+```{r, results='markup'}
+
+df_hypertension_stroke <- recycleData %>%
+  group_by(hypertension, stroke) %>%
+  count(stroke)
+
+df_hypertension_stroke %>%
+ggplot(mapping = aes(x = hypertension, y = n, fill = factor(stroke))) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(title = "Percentage of subjects with Hypertension vs. without Hypertension", 
+       x = "Hypertension", 
+       y = "Percentage") +
+  scale_fill_brewer(palette = "Paired")
+
+ggplot(recycleData, aes(hypertension, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs hypertension on stroke")
+
+```
+
+
+As we can see from the graph that the number of hypertension cases increases with the age due to multiple biological factors.\
+From the above charts, we see that the number of strokes is correlated to the hypertension status of the subject. But hypertension is in-turn correlated to age.\
+
+
+### Data Analysis for Ever Married
+
+```{r results='markup'}
+
+ggplot(data = recycleData, mapping = aes(x = ever_married, y = age)) +
+  geom_boxplot()
+
+select_married <- select(recycleData, c('ever_married','stroke'))
+
+married_effect <- 
+  select_married %>% 
+  group_by(ever_married, stroke) %>% 
+  count(stroke)
+
+ggplot(married_effect, aes(ever_married, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Marriage Status on stroke")
+
+ggplot(recycleData, aes(ever_married, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs ever_married on stroke")
+```
+
+ From the plot above, we see that people who are married are more likely to get stroke but we then notice that age is a contributing factor to this hypothesis. The married people that get stroke are noticed in the older age bracket, which is why we say age is a major contributing factor to stroke.\
+
+
+### Data Analysis for Smoking Status
+
+```{r results='markup'}
+no_na_for_smoking_status <- subset(recycleData, !is.na(smoking_status))
+
+ggplot(no_na_for_smoking_status, aes(smoking_status, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs smoking_status on stroke")
+
+select_smoke <- select(no_na_for_smoking_status, c('smoking_status','stroke'))
+
+smoke_effect <- select_smoke %>% 
+  group_by(smoking_status, stroke) %>% 
+  count(stroke)
+
+ggplot(smoke_effect, aes(smoking_status, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for smoking_status on stroke")
+```
+
+
+ After the analysis of smoking status against stroke where `0` is `No` and `1` is `Yes`, we notice that smoking status does not really have an effect on stroke. According to the graph, we see that people who formerly smoked have more tendency to get strokes than people who never smoked and are still smoking. The boxplot distribution then shows that age is indeed has a great effect on stroke, we see that people approximately above 60 and formerly smoked have strokes under a normal distribution and younger people across all distribution do not have strokes.\
+
+### Gender
+**Data Analysis for Gender**
+
+```{r results='markup'}
+
+ggplot(data = recycleData, mapping = aes(x = gender, y = age)) +
+  geom_boxplot()
+
+
+select_gender <- select(recycleData, c('gender','stroke'))
+gender_effect <- select_gender %>% 
+  group_by(gender, stroke) %>% 
+  count(stroke)
+
+ggplot(gender_effect, aes(gender, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Gender on stroke")
+
+ggplot(recycleData, aes(gender, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs gender on stroke")
+
+```
+
+\ The plots we see above indicates that if we are looking at gender alone as a factor for strokes, males are more likely to get strokes that females but this does not really prove to be a strong effect on stroke. We then plot gender with age against strokes and notice the same result we have been getting, all evidence point to age i.e Age is a huge factor to determining if an individual is prone to stroke. \
+
+### Data Analysis for Work Type
+
+```{r results='markup'}
+
+ggplot(data = recycleData, mapping = aes(x = work_type, y = age)) +
+  geom_boxplot()
+
+
+select_work <- select(recycleData, c('work_type','stroke'))
+workType_effect <- select_work %>% 
+  group_by(work_type, stroke) %>% 
+  count(stroke)
+
+ggplot(workType_effect, aes(work_type, n, fill = stroke)) + 
+  geom_bar(stat = 'identity', position='fill') + 
+  ggtitle("Distribution for Work Type on stroke")
+
+ggplot(recycleData, aes(work_type, age, color = stroke)) + 
+  geom_boxplot() + 
+  ggtitle("Distribution for age vs work_type on stroke")
+
+```
+
+
+ From the box plot people with govt_job, private and self-employed are more likely to get heart stroke.\ 
+But when comparing with age, this might be because people who have stroke in these 3 categories are older.\
+So age might be contributing to this dependence. \
+
+
+### Chi square Testing to check independence of variable
+
+```{r, results='markup'}
+chisquare_for_dataset <- function(df) {     # defined a function to call chisquare test on different datasets. Created this function as it is getting called twice
+contable_gender = table(df$gender, df$stroke)
+contable_age = table(df$age, df$stroke)
+contable_hypertension = table(df$hypertension, df$stroke)
+contable_heart_disease = table(df$heart_disease, df$stroke)
+contable_ever_married = table(df$ever_married, df$stroke)
+contable_work_type = table(df$work_type, df$stroke)
+contable_Residence_type = table(df$Residence_type, df$stroke)
+contable_avg_glucose_level = table(df$avg_glucose_level, df$stroke)
+contable_bmi = table(df$bmi, df$stroke)
+contable_smoking_status = table(df$smoking_status, df$stroke)
+contable_glucose_group = table(df$glucoseGroup)
+
+chitest_gender = chisq.test(contable_gender)
+chitest_age = chisq.test(contable_age)
+chitest_hypertension = chisq.test(contable_hypertension)
+chitest_heart_disease = chisq.test(contable_heart_disease)
+chitest_ever_married = chisq.test(contable_ever_married)
+chitest_work_type = chisq.test(contable_work_type)
+chitest_Residence_type = chisq.test(contable_Residence_type)
+chitest_avg_glucose_level = chisq.test(contable_avg_glucose_level)
+chitest_bmi = chisq.test(contable_bmi)
+chitest_smoking_status = chisq.test(contable_smoking_status)
+chitest_glucose_group = chisq.test(contable_glucose_group)
+
+
+print(chitest_gender)
+print(chitest_age)
+print(chitest_hypertension)
+print(chitest_heart_disease)
+print(chitest_ever_married)
+print(chitest_work_type)
+print(chitest_Residence_type)
+print(chitest_avg_glucose_level)
+print(chitest_bmi)
+print(chitest_smoking_status)
+print(chitest_glucose_group)
+
+}
+```
+
+```{r, results='markup'}
+print("For up sampled dataset")
+chisquare_for_dataset(cleanData)
+```
+
+
+### TTEST to check similarity of distributions
+```{r, results='markup'}
+subset_stroke_1 = subset(cleanData, cleanData$stroke == 1)
+subset_stroke_0 = subset(cleanData, cleanData$stroke == 0)
+
+
+ttest2sample_age = t.test(subset_stroke_1$age, subset_stroke_0$age)
+ttest2sample_bmi = t.test(subset_stroke_1$bmi, subset_stroke_0$bmi)
+ttest2sample_glucose = t.test(subset_stroke_1$avg_glucose_level, subset_stroke_0$avg_glucose_level)
+
+print(ttest2sample_age)
+print(ttest2sample_bmi)
+print(ttest2sample_glucose)
+```
+**Age TTEST**\
+*NULL hypothesis*: Means of age with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of age with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is very small so we can reject the NULL hypothesis. So age with stroke and age without stroke have different distributions.
+
+**BMI TTEST**\
+*NULL hypothesis*: Means of BMI values with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of BMI values with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is not small so we cannot reject the NULL hypothesis. So BMI with stroke and BMI without stroke have same distributions.\
+
+**Glucose level TTEST**\
+*NULL hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are same i.e. same distributions.\
+*Alternate Hypothesis*: Means of glucose levels with subjects having stroke and not having stroke are different i.e. different distributions.\
+Pvalue is very small so we can reject the NULL hypothesis. So glucose levels with stroke and glucose levels without stroke have different distributions.\
+
+
+### SMART Question 1 : Do age, work type, and gender contribute to a person's smoking status, as there are unknown values in that column?
+
+**Age versus Smoking Status**
+From the below graph, we can see that unknown value of smoking status contains majority of values in age range of 0-14 
+```{r results='markup'}
+
+ggplot(brainData, 
+       aes(x = age, 
+           fill = smoking_status)) +
+  geom_density(alpha = 0.4) +
+  labs(title = "Avg glucose level distribution by age color coded by smoking status")
+
+ggplot(data = brainData, mapping = aes(y = age,x=smoking_status)) +
+  geom_boxplot() + geom_boxplot( colour="black", fill="#7777cc", outlier.colour="red", outlier.shape=8, outlier.size=2)
+
+```
+
+Based on the box plot and distribution 
+we can comment a little 
+for age group less than 14 can replace it with never smoked 
+apart from that we won't be able to replace missing values accurately based on age
+**Age versus Smoking Status color coded by worktype**
+```{r results='markup'}
+
+ggplot(brainData, aes(x = smoking_status, y = age, fill = work_type)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("orange", "red", "green","blue","yellow")) +
+  labs(title = "Age versus Smoking status color coded by work type")
+  theme_classic()
+  
+```
+
+
+From the above graph, we can fill the values less than 15 in formerly smoked (childrens) \
+For the other categories people who have never worked mostly lies in formerly smoked category \
+we cannot comment a lot on relation with private and self-employed work type
+
+So, based on above analysis, smoking status might be related to work type and we might be able to fill few values using this plot
+
+```{r results='markup'}
+ggplot(brainData, aes(x = smoking_status, y = age, fill = gender)) +
+  geom_boxplot() +
+  scale_fill_manual(values = c("pink", "blue", "green")) +
+  labs(title = "Age versus Smoking status color coded by gender")
+  theme_classic()  
+```
+
+  
+The plot of gender for male and female is almost similar for all three category. \
+There are only few entries for others, so it's not providing important relations
+
+Hence, from the above plot gender is not affecting smoking status and we cannot fill our missing values using that. 
+
+***Hypothesis Testing for finding Correlation***
+```{r results='markup'}
+aov1 = aov(age~smoking_status , cleanData)
+summary(aov1)
+```
+With the p-value <2e-16, we can see that smoking_status and age are related 
+
+Hence, the only variable slightly related to fill out the missing values is age.
+But due to Class Imbalance data
+and out of `r nrow(subset(brainData,smoking_status ==''))` Missing values `r nrow(subset(brainData,smoking_status =='' & age < 14))` being children, we will directly drop the unknown values rows. 
+
+### Conclusion
+
+1. The risk of stroke increases with age.\
+2. People with hypertension have higher risk of getting a stroke.\
+3. People with higher average glucose levels are more prone to brain stroke.\
+4. People with heart disease have higher chance of getting a brain stroke.\
+5. Gender, marital status, worktype, residence type and BMI levels do not contribute to the brain stroke as per our dataset.\
+6. Smoking status does not have a major impact on stroke as per our dataset but there is some impact which is partly due to age.\
