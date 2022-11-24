@@ -117,6 +117,60 @@ plot(logitModelPred,
      xlab = "Patients ", ylab = "Predicted Probability of stroke")
 ```
 
+### Deciding the cut off level 
+```{r results}
+# setting the cut-off probablity
+# function to print confusion matrices for diffrent cut-off levels of probability
+#to get confusion matrix checking the max probability from the graph
+max_prob <- 0.3
+min_prob <- 0.001
 
+CmFn <- function(cutoff) {
+
+       # predicting the test set results
+         logitModelPred <- predict(logitModel, test, type = "response")
+         C1 <- ifelse(logitModelPred > cutoff, 1, 0)
+         C2 <- test$stroke
+         predY   <- as.factor(C1)
+         actualY <- as.factor(C2)
+
+        # use the confusionMatrix 
+        cm1 <-confusionMatrix(table(predY,actualY))
+        print(cutoff)
+        print(cm1$table)
+        # extracting accuracy
+        Accuracy <- cm1$overall[1]
+        print(Accuracy)
+        # extracting sensitivity
+          Sensitivity <- cm1$byClass[1]
+        # extracting specificity
+          Specificity <- cm1$byClass[2]
+      # extracting value of kappa
+          Kappa <- cm1$overall[2]
+
+        # combined table
+          tab <- cbind(cutoff,Accuracy,Sensitivity,Specificity,Kappa)
+        return(tab)}
+# making sequence of cut-off probabilities       
+cutoff1 <- seq( min_prob, max_prob, by = .05 )
+# loop using "lapply"
+tab2    <- lapply(cutoff1, CmFn)
+tab2
+       
+```
+
+#ROC Curve
+```{r}
+# loading the package
+#library(ROCR)
+
+library(pROC)
+#loadPkg("pROC") # receiver operating characteristic curve, gives the diagnostic ability of a binary classifier system as its discrimination threshold is varied. The curve is on sensitivity/recall/true-positive-rate vs false_alarm/false-positive-rate/fall-out.
+prob=predict(logitModel,test, type = "response")
+#Admit$prob=prob
+h <- roc(stroke~prob, data=test)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
 
 
