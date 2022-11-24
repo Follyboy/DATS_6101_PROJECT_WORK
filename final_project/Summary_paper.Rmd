@@ -271,6 +271,7 @@ Replacing Missing Values for BMI with median.
 #removing missing values for BMI
 cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
 #summary(cleanData)
+beforeSMOTE <- cleanData
 ```
 
  
@@ -915,5 +916,15 @@ But as per our dataset, smoking status does not contribute to the stroke signifi
 
 
 Final file.
+
+#Saving our cleaned Dataset 
+##Before doing SMOTE and after doing SMOTE 
+```{r results='markup'}
+afterSMOTE <- cleanData
+write.csv(beforeSMOTE,"beforeSMOTE.csv", row.names = FALSE)
+write.csv(afterSMOTE,"afterSMOTE.csv", row.names = FALSE)
+```
+
+
 
 
