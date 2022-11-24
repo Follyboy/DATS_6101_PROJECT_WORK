@@ -83,4 +83,40 @@ train <- modellingDataset[split1 == 0, ]
 test <- modellingDataset[split1== 1, ] 
 ```
 
+###Logistic Regression
+```{r results='markup'}
+# fit logistic regression model 
+logitModel <- glm(stroke~ ., 
+                        data = train, 
+                        family = binomial())
+
+summary(logitModel)
+```
+Significant variables in case of beforeSMOTE 
+
+* age 
+* hypertension 
+* heart_disease 
+* avg_glucose_level 
+
+Significant variables after applying SMOTE
+
+* genderMale
+* age
+* hypertension1
+* heart_disease1
+* work_typeGovt_job
+* smoking_statussmokes
+
+#Predicting accuracy 
+```{r }
+logitModelPred <- predict(logitModel, test, type = "response")
+# plot of probabilities
+plot(logitModelPred, 
+     main = "Scatterplot of Probabilities of stroke (test data)", 
+     xlab = "Patients ", ylab = "Predicted Probability of stroke")
+```
+
+
+
 
