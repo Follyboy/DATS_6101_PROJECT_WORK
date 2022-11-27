@@ -76,6 +76,8 @@ modellingDataset <- afterSMOTE
 
 ## Splitting the dataset into train and test 
 ```{r}
+library(dplyr)
+
 set.seed(123)  
 split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
 table(split1) 
@@ -83,6 +85,9 @@ table(split1)
 train <- modellingDataset[split1 == 0, ]
 #test split
 test <- modellingDataset[split1== 1, ] 
+
+train <- train %>% relocate(stroke, .after=glucoseGroup)
+test <- test %>% relocate(stroke, .after=glucoseGroup)
 ```
 
 ```{r, results='markup'}
@@ -97,4 +102,30 @@ summary(rf)
 predict_test = predict(rf, test)
 confusionMatrix(predict_test, test$stroke)
 ```
+```{r}
+head(train)
+```
 
+```{r, results='markup'}
+rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=train, proximity=TRUE)
+```
+
+```{r, results='markup'}
+predict_test2 = predict(rf2, test)
+confusionMatrix(predict_test2, test$stroke)
+```
+
+```{r, results='markup'}
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=train, proximity=TRUE)
+```
+
+```{r, results='markup'}
+predict_test3 = predict(rf3, test)
+confusionMatrix(predict_test3, test$stroke)
+```
+```{r}
+plot(rf3)
+```
+```{r}
+print(rf3)
+```
