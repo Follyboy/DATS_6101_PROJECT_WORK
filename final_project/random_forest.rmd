@@ -37,6 +37,7 @@ beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
 beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
 beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
 beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
+#beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
 summary(beforeSMOTE)
 
 #factoring the dataset
@@ -48,6 +49,7 @@ afterSMOTE$work_type = factor(afterSMOTE$work_type)
 afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
 afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
 afterSMOTE$stroke = factor(afterSMOTE$stroke)
+afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
 summary(afterSMOTE)
 
 cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
@@ -129,3 +131,51 @@ plot(rf3)
 ```{r}
 print(rf3)
 ```
+```{r}
+trControl <- trainControl(method = "cv",
+    number = 10,
+    search = "grid")
+```
+
+```{r}
+rf_cv <- train(stroke~.,
+    data = train,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = trControl)
+# Print the results
+print(rf_cv)
+
+```
+
+
+```{r}
+rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
+    data = train,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = trControl)
+# Print the results
+print(rf_cv1)
+
+```
+
+
+
+```{r}
+rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
+    data = train,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = trControl)
+# Print the results
+print(rf_cv2)
+
+```
+
+```{r}
+summary(train)
+```
+
+
+
