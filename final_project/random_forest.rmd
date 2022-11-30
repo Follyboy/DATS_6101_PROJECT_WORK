@@ -125,9 +125,7 @@ rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=train, p
 predict_test3 = predict(rf3, test)
 confusionMatrix(predict_test3, test$stroke)
 ```
-```{r}
-plot(rf3)
-```
+
 ```{r}
 print(rf3)
 ```
@@ -176,6 +174,83 @@ print(rf_cv2)
 ```{r}
 summary(train)
 ```
+
+
+```{r}
+plot(rf)
+plot(rf2)
+plot(rf3)
+```
+
+```{r}
+varImpPlot(rf)
+```
+```{r}
+varImpPlot(rf2)
+```
+
+```{r}
+varImpPlot(rf3)
+```
+```{r}
+colnames(train)
+```
+
+
+
+```{r, results='markup'}
+rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=train, proximity=TRUE)
+print(rf4)
+```
+
+```{r, results='markup'}
+rf5 <- randomForest(stroke~age, data=train, proximity=TRUE)
+print(rf5)
+```
+
+
+
+```{r, results='markup'}
+predict_test4 = predict(rf4, test)
+confusionMatrix(predict_test4, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test5 = predict(rf5, test)
+confusionMatrix(predict_test5, test$stroke)
+```
+
+
+```{r}
+rf_cv5 <- train(stroke~age,
+    data = train,
+    method = "rf",
+    metric = "Accuracy",
+    trControl = trControl)
+# Print the results
+print(rf_cv5)
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
