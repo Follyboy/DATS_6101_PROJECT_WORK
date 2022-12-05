@@ -67,8 +67,8 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 ```{r}
 #set it to beforeSMOTE/afterSMOTE
 
-modellingDataset <- beforeSMOTE
-#modellingDataset <- afterSMOTE
+#modellingDataset <- beforeSMOTE
+modellingDataset <- afterSMOTE
 ```
 
 
@@ -86,12 +86,95 @@ test <- modellingDataset[split1== 1, ]
 ###Logistic Regression
 ```{r results='markup'}
 # fit logistic regression model 
-logitModel <- glm(stroke~ ., 
+logitModel <- glm(stroke~ gender+hypertension+ever_married+smoking_status+avg_glucose_level, 
                         data = train, 
                         family = binomial())
 
 summary(logitModel)
 ```
+```{r results }
+# prediction
+train$prediction <- predict( logitModel, newdata = train, type = "response" )
+test$prediction  <- predict( logitModel, newdata = test , type = "response" )
+
+# distribution of the prediction score grouped by known outcome
+ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Set's Predicted Score" ) #+ 
+#scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
+#theme_economist()
+```
+
+
+
+```{r }
+# Useful functions when working with logistic regression
+library(ROCR)
+library(grid)
+library(caret)
+library(dplyr)
+library(scales)
+library(ggplot2)
+library(gridExtra)
+library(data.table)
+
+# ------------------------------------------------------------------------------------------
+# [AccuracyCutoffInfo] : 
+# Obtain the accuracy on the trainining and testing dataset.
+# for cutoff value ranging from .4 to .8 ( with a .05 increase )
+# @train   : your data.table or data.frame type training data ( assumes you have the predicted score in it ).
+# @test    : your data.table or data.frame type testing data
+# @predict : prediction's column name (assumes the same for training and testing set)
+# @actual  : actual results' column name
+# returns  : 1. data : a data.table with three columns.
+#            		   each row indicates the cutoff value and the accuracy for the 
+#            		   train and test set respectively.
+# 			 2. plot : plot that visualizes the data.table
+
+AccuracyCutoffInfo <- function( train, test, predict, actual )
+{
+	# change the cutoff value's range as you please 
+	cutoff <- seq( .4, .8, by = .05 )
+
+	accuracy <- lapply( cutoff, function(c)
+	{
+		# use the confusionMatrix from the caret package
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]) )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]) )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$overall[["Accuracy"]],
+		 			      test   = cm_test$overall[["Accuracy"]] )
+		return(dt)
+	}) %>% rbindlist()
+
+	# visualize the accuracy of the train and test set for different cutoff value 
+	# accuracy in percentage.
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Accuracy for Different Cutoff" )
+
+	return( list( data = accuracy, plot = plot ) )
+	
+	
+}
+```
+
+```{r}
+AccuracyCutoffInfo( train = train_data, test = test_data, 
+                                     predict = "prediction", actual = "stroke" )
+```
+
+```{r}
+summary(train)
+
+```
+
 Significant variables in case of beforeSMOTE 
 
 * age 
