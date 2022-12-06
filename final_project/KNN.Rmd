@@ -12,6 +12,7 @@ Importing the required libraries
 ```{r}
 library(caret)
 library(dplyr)
+library("pROC")
 ```
 
 
@@ -130,6 +131,14 @@ xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
 ```
 
 
+```{r, results='markup'}
+# For KNN Model for Before SMOTE
+h <- roc(split1.testLabels, attributes(pred_best)$prob)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
+
+
 ## Setting the variable for checking 
 ```{r}
 #set it to afterSMOTE
@@ -162,7 +171,7 @@ split1.testLabels <- modellingDataset[split1==1, 12]
 ```
 
 
-##KNN
+##KNN for After SMOTE
 ```{r, results='markup'}
 
 library(FNN)
@@ -194,6 +203,14 @@ cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
 xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
 xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
 
+```
+
+
+```{r, results='markup'}
+# For KNN Model for After SMOTE
+h <- roc(split1.testLabels, attributes(pred_best)$prob)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
 ```
 
 
