@@ -49,10 +49,6 @@ afterSMOTE$stroke = factor(afterSMOTE$stroke)
 afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
 summary(afterSMOTE)
 
-# cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
-# PieChart(stroke, data = beforeSMOTE, hole = 0,
-#          fill = cols,
-#          labels_cex = 0.6)
 ```
 
 ### After SMOTE
