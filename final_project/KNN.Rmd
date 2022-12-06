@@ -10,11 +10,8 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Importing the required libraries
 ```{r}
-# install.packages(randomForest)
 library(caret)
 library(dplyr)
-# library(lessR)
-library(randomForest)
 ```
 
 
@@ -65,34 +62,90 @@ summary(afterSMOTE)
 #          labels_cex = 0.6)
 ```
 
-
-## Setting the variable for checking 
+## Setting the variable for checking  for Before SMOTE
 ```{r}
-#set it to beforeSMOTE/afterSMOTE
+#set it to beforeSMOTE
 
-#modellingDataset <- beforeSMOTE
-modellingDataset <- afterSMOTE
-modellingDataset <- modellingDataset %>% relocate(stroke, .after=glucoseGroup)
-
-# str(modellingDataset)
-# modellingDataset$gender <- ifelse(modellingDataset$gender == "Female", 1, 0)
-# modellingDataset$ever_married <- ifelse(modellingDataset$ever_married == "Yes", 1, 0)
-# modellingDataset$Residence_type <- ifelse(modellingDataset$Residence_type == "Urban", 1, 0)
-
-# head(modellingDataset)
-# table(modellingDataset$gender)
+modellingDataset <- beforeSMOTE
+head(modellingDataset)
 
 data <- dummyVars("stroke ~ .", data = modellingDataset, fullRank = T)
 custom_data <- data.frame(predict(data, newdata = modellingDataset))
 
 length(custom_data)
 head(custom_data)
-# glimpse(custom_data)
-# head(custom_data)
 ```
 
 
-## Splitting the dataset into train and test 
+## Splitting the dataset into train and test for Before SMOTE
+```{r}
+library(dplyr)
+
+set.seed(123)  
+split1<- sample(c(rep(0, 0.7 * nrow(custom_data)), rep(1, 0.3 * nrow(custom_data))))
+table(split1) 
+#train split
+train <- custom_data[split1 == 0, 0:14]
+#test split
+test <- custom_data[split1== 1, 0:14] 
+
+split1.trainLabels <- modellingDataset[split1==0, 11]
+split1.testLabels <- modellingDataset[split1==1, 11]
+```
+
+
+
+##KNN for Before SMOTE
+```{r, results='markup'}
+
+library(FNN)
+library(gmodels)
+library(caret)
+
+
+ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
+
+for (kval in 3:15) {
+  prediction <- knn(train = train, test = test, cl=split1.trainLabels, k=kval)
+
+  cm = confusionMatrix(prediction, reference = split1.testLabels )
+
+  cmaccu = cm$overall['Accuracy']
+
+  cmt = data.frame(k=kval, Total.Accuracy = cmaccu, row.names = NULL )
+  ResultDf = rbind(ResultDf, cmt)
+}
+
+xkabledply(ResultDf, "Total Accuracy Summary")
+best_accuracy <- ResultDf[which.max(ResultDf$Total.Accuracy),]
+k_value <- best_accuracy$k
+
+pred_best <- knn(train =train, test = test, cl=split1.trainLabels, k=k_value, prob=TRUE)
+PREDCross_best <- CrossTable(split1.testLabels, pred_best, prop.chisq = FALSE)
+cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
+
+xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
+xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
+
+```
+
+
+## Setting the variable for checking 
+```{r}
+#set it to afterSMOTE
+
+modellingDataset <- afterSMOTE
+modellingDataset <- modellingDataset %>% relocate(stroke, .after=glucoseGroup)
+
+data <- dummyVars("stroke ~ .", data = modellingDataset, fullRank = T)
+custom_data <- data.frame(predict(data, newdata = modellingDataset))
+
+length(custom_data)
+head(custom_data)
+```
+
+
+## Splitting the dataset into train and test for After SMOTE
 ```{r}
 library(dplyr)
 
@@ -104,9 +157,10 @@ train <- custom_data[split1 == 0, 0:16]
 #test split
 test <- custom_data[split1== 1, 0:16] 
 
-split1.trainLabels <- modellingDataset[split1==0, 11]
-split1.testLabels <- modellingDataset[split1==1, 11]
+split1.trainLabels <- modellingDataset[split1==0, 12]
+split1.testLabels <- modellingDataset[split1==1, 12]
 ```
+
 
 ##KNN
 ```{r, results='markup'}
@@ -119,9 +173,7 @@ library(caret)
 ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
 
 for (kval in 3:15) {
-  # prediction <- knn(train = train, test = test, cl=split1.trainLabels, k=kval)
   prediction <- knn(train = train, test = test, cl=split1.trainLabels, k=kval)
-  # PIMAPREDCross <- CrossTable(pima.testLabels, pima_pred, prop.chisq = FALSE)
 
   cm = confusionMatrix(prediction, reference = split1.testLabels )
 
@@ -132,6 +184,15 @@ for (kval in 3:15) {
 }
 
 xkabledply(ResultDf, "Total Accuracy Summary")
+best_accuracy <- ResultDf[which.max(ResultDf$Total.Accuracy),]
+k_value <- best_accuracy$k
+
+pred_best <- knn(train =train, test = test, cl=split1.trainLabels, k=k_value, prob=TRUE)
+PREDCross_best <- CrossTable(split1.testLabels, pred_best, prop.chisq = FALSE)
+cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
+
+xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
+xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
 
 ```
 
