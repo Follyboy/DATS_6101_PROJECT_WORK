@@ -64,14 +64,18 @@ summary(afterSMOTE)
 #set it to beforeSMOTE
 
 modellingDataset <- beforeSMOTE
+
 head(modellingDataset)
 
+# convert categorical variables to numerical except our response variable
 data <- dummyVars("stroke ~ .", data = modellingDataset, fullRank = T)
 custom_data <- data.frame(predict(data, newdata = modellingDataset))
 
 length(custom_data)
 head(custom_data)
 ```
+
+* We used the `dummyVars` function, which creates dummy variables, to convert our categorical variables to numerical variables in order to run those variables with our `KNN` function.
 
 
 ## Splitting the dataset into train and test for Before SMOTE
@@ -90,6 +94,8 @@ split1.trainLabels <- modellingDataset[split1==0, 11]
 split1.testLabels <- modellingDataset[split1==1, 11]
 ```
 
+
+* We have separated the x variables from our response variable (`stroke`), but before we sparated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
 
 
 ##KNN for Before SMOTE
@@ -126,6 +132,12 @@ xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
 
 ```
 
+* Most of our data before using our sampling technique had result of people without strokes, so this affected our results for our KNN prediction. This is why we do not have predictions of individuals prone to stroke. 
+
+* According to our accuracy summary using k-values between 3 to 15 for our original data, our best accuracy model is with a k-value of 8. 
+
+* From our confusion matrix, we can say that the accuracy of this model is `(8838 + 0)/9029 = 0.979`, therefore we can say that this model is 97.9% accurate.
+
 
 ```{r, results='markup'}
 # For KNN Model for Before SMOTE
@@ -133,6 +145,8 @@ h <- roc(split1.testLabels, attributes(pred_best)$prob)
 auc(h) # area-under-curve prefer 0.8 or higher.
 plot(h)
 ```
+
+* We have here the area-under-curve of `auc(h)`, which is less than 0.8. This test shows that this model is not considered a good fit.
 
 
 ## Setting the variable for checking 
@@ -160,7 +174,7 @@ table(split1)
 #train split
 train <- custom_data[split1 == 0, 0:16]
 #test split
-test <- custom_data[split1== 1, 0:16] 
+test <- custom_data[split1== 1, 0:16]
 
 split1.trainLabels <- modellingDataset[split1==0, 12]
 split1.testLabels <- modellingDataset[split1==1, 12]
@@ -200,6 +214,10 @@ xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value)
 xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
 
 ```
+
+* According to our accuracy summary using k-values between 3 to 15 for our original data, our best accuracy model is with a k-value of 3. 
+
+* From our confusion matrix, we can say that the accuracy of this model is `(6357 + 2597)/9029 = 0.979`, therefore we can say that this model is 97.9% accurate.
 
 
 ```{r, results='markup'}
