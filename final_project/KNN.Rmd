@@ -144,7 +144,7 @@ split1.testLabels <- test[, 11]
 
 ##KNN for Before SMOTE
 ```{r, results='markup'}
-
+library(ezids)
 library(FNN)
 library(gmodels)
 library(caret)
