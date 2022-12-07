@@ -61,6 +61,20 @@ afterSMOTE$stroke = factor(afterSMOTE$stroke)
 afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
 summary(afterSMOTE)
 
+#testing 
+#factoring the dataset
+test$gender = factor(test$gender)
+test$hypertension = factor(test$hypertension)
+test$heart_disease = factor(test$heart_disease)
+test$ever_married = factor(test$ever_married)
+test$work_type = factor(test$work_type)
+test$Residence_type = factor(test$Residence_type)
+test$smoking_status = factor(test$smoking_status)
+test$stroke = factor(test$stroke)
+test$glucoseGroup = factor(test$glucoseGroup)
+summary(test)
+
+testAfterSMOTE <- test 
 cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
 PieChart(stroke, data = beforeSMOTE, hole = 0,
          fill = cols,
@@ -77,34 +91,20 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 
 
 
-## Setting the variable for checking and Splitting into Train and Test
-```{r}
-#set it to beforeSMOTE/afterSMOTE
-
-modellingDataset <- beforeSMOTE
-set.seed(123)  
-split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
-table(split1) 
-#train split
-train <- modellingDataset[split1 == 0, ]
-#test split
-test <- modellingDataset[split1== 1, ]
-```
-
 ## Logistic Regression on Original Dataset 
 ```{r}
-logitModel1 <- glm(stroke~ ., data = train, family = binomial())
-logitModel2 <- glm(stroke~ ., data = train, family = binomial())
-logitModel3 <- glm(stroke~ ., data = train, family = binomial())
-logitModel4 <- glm(stroke~ ., data = train, family = binomial())
+logitModel1 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel2 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel3 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel4 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
 
 ```
 
 ## Plotting Training Set Prediction Score
 ```{r results='markup'}
 
-train$prediction <- predict( logitModel, newdata = train, type = "response" )
-test$prediction  <- predict( logitModel, newdata = test , type = "response" )
+beforeSMOTE$prediction <- predict( logitModel, newdata = beforeSMOTE, type = "response" )
+beforeSMOTE$prediction  <- predict( logitModel, newdata = test , type = "response" )
 par(mfrow = c(1, 2))
 ggp1 <- ggplot( train, aes( prediction, color = as.factor(stroke) ) ) + 
 geom_density( size = 1 ) +
