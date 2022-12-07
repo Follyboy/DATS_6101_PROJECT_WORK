@@ -17,7 +17,7 @@ library(dplyr)
 library(lessR)
 #install.packages("gridExtra")               # Install gridExtra package
 library("gridExtra")
-
+library(tidyr)
 # Useful functions when working with logistic regression
 library(ROCR)
 library(grid)
@@ -27,8 +27,9 @@ library(scales)
 library(ggplot2)
 library(gridExtra)
 library(data.table)
-
-
+library(caret)
+library(pscl)
+library(DMwR)
 ```
 
 ##Loading both the datasets 
@@ -47,7 +48,7 @@ beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
 beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
 beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
 beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
-summary(beforeSMOTE)
+#summary(beforeSMOTE)
 
 #factoring the dataset
 afterSMOTE$gender = factor(afterSMOTE$gender)
@@ -59,7 +60,7 @@ afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
 afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
 afterSMOTE$stroke = factor(afterSMOTE$stroke)
 afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
-summary(afterSMOTE)
+#summary(afterSMOTE)
 
 #testing 
 #factoring the dataset
@@ -72,7 +73,7 @@ test$Residence_type = factor(test$Residence_type)
 test$smoking_status = factor(test$smoking_status)
 test$stroke = factor(test$stroke)
 test$glucoseGroup = factor(test$glucoseGroup)
-summary(test)
+#summary(test)
 
 testAfterSMOTE <- test 
 cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
@@ -93,28 +94,80 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 
 ## Logistic Regression on Original Dataset 
 ```{r}
-logitModel1 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
-logitModel2 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
-logitModel3 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
-logitModel4 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel1_b <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel2_b <- glm(stroke~ age + age:hypertension + age:heart_disease +age:avg_glucose_level, data = beforeSMOTE, family = binomial())
+logitModel2_c <- glm(stroke~ age*hypertension + age*heart_disease +age*avg_glucose_level, data = beforeSMOTE, family = binomial())
 
+logitModel3_b <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel4_b <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+
+logitModel1_a <- glm(stroke~ ., data = afterSMOTE, family = binomial())
+logitModel2_a <- glm(stroke~ age + age:hypertension + age:heart_disease +age:avg_glucose_level, data = afterSMOTE, family = binomial())
+logitModel2_d <- glm(stroke~ age*hypertension + age*heart_disease +age*avg_glucose_level, data = afterSMOTE, family = binomial())
+logitModel3_a <- glm(stroke~ ., data = afterSMOTE, family = binomial())
+logitModel4_a <- glm(stroke~ ., data = afterSMOTE, family = binomial())
+
+logitModel_b <-logitModel2_c
+logitModel_a <- logitModel2_d
+summary(logitModel_b)
+summary(logitModel_a)
+```
+
+## Before SMOTE
+```{r results='markup'}
+pR2(logitModel_b)
+AIC(logitModel_b)
+```
+
+## After SMOTE
+```{r results='markup'}
+pR2(logitModel_a)
+AIC(logitModel_a)
+```
+
+##test
+```{r}
+# testDataAfterSmote <- SMOTE(stroke ~ ., test, perc.over = 2000, perc.under = 100)
+# train_0 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==0)
+# train_1 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==1)
+# print(nrow(train_1))
+# print(nrow(train_0))
 ```
 
 ## Plotting Training Set Prediction Score
+Before SMOTE
 ```{r results='markup'}
 
-beforeSMOTE$prediction <- predict( logitModel, newdata = beforeSMOTE, type = "response" )
-beforeSMOTE$prediction  <- predict( logitModel, newdata = test , type = "response" )
+beforeSMOTE$prediction <- predict( logitModel_b, newdata = beforeSMOTE, type = "response" )
+test$prediction  <- predict( logitModel_b, newdata = test , type = "response" )
+
 par(mfrow = c(1, 2))
-ggp1 <- ggplot( train, aes( prediction, color = as.factor(stroke) ) ) + 
+ggp1 <- ggplot( beforeSMOTE, aes( prediction, color = as.factor(stroke) ) ) + 
 geom_density( size = 1 ) +
-ggtitle( "Training Set's Predicted Score" ) 
+ggtitle( "Training Set's Predicted Score before SMOTE" ) 
 
 ggp2 <- ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
 geom_density( size = 1 ) +
-ggtitle( "Testing Set's Predicted Score" ) 
+ggtitle( "Testing Set's Predicted Score before SMOTE" ) 
 grid.arrange(ggp1, ggp2, ncol = 2) 
 ```
+
+After SMOTE
+```{r results='markup'}
+
+afterSMOTE$prediction <- predict( logitModel_a, newdata = afterSMOTE, type = "response" )
+testAfterSMOTE$prediction  <- predict( logitModel_a, newdata = test , type = "response" )
+par(mfrow = c(1, 2))
+ggp1 <- ggplot( afterSMOTE, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Training Set's Predicted Score after SMOTE" ) 
+
+ggp2 <- ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Set's Predicted Score after SMOTE" ) 
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+### Accuracy versus Cutoff 
 
 ```{r results='markup'}
 # ------------------------------------------------------------------------------------------
@@ -129,7 +182,6 @@ grid.arrange(ggp1, ggp2, ncol = 2)
 #            		   each row indicates the cutoff value and the accuracy for the 
 #            		   train and test set respectively.
 # 			 2. plot : plot that visualizes the data.table
-
 AccuracyCutoffInfo <- function( train, test, predict, actual )
 { 
 	cutoff <- seq( .01, .9, by = .05 )
@@ -152,13 +204,273 @@ AccuracyCutoffInfo <- function( train, test, predict, actual )
 	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
 			geom_line( size = 1 ) + geom_point( size = 3 ) +
 			scale_y_continuous( label = percent ) +
-			ggtitle( "Train/Test Accuracy for Different Cutoff" )
+			ggtitle( "Train/Test Accuracy vs Cutoff" )
 	return( list( data = accuracy, plot = plot ) )
 }
 ```
 
 
 ```{r results='markup'}
-AccuracyCutoffInfo( train = train, test = test, predict = "prediction", actual = "stroke" )
+par(mfrow = c(1, 2))
+list1 <- AccuracyCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- AccuracyCutoffInfo( train = afterSMOTE, test = test, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
 
+### Sensitivity versus cutoff 
+```{r results='markup'}
+SensitivityCutoffInfo <- function( train, test, predict, actual )
+{
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$byClass[["Sensitivity"]],
+		 			    test   = cm_test$byClass[["Sensitivity"]] )
+		return(dt)
+	}) %>% rbindlist()
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Sensivity vs Cutoff" )+
+	    ylab("Sensitivity")
+
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+list1 <- SensitivityCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- SensitivityCutoffInfo( train = afterSMOTE, test = test, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+### Precision versus cutoff 
+```{r results='markup'}
+PrecisionCutoffInfo <- function( train, test, predict, actual )
+{
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$byClass[["Precision"]],
+		 			    test   = cm_test$byClass[["Precision"]] )
+		return(dt)
+	}) %>% rbindlist()
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Precision vs Cutoff" )+
+	    ylab("Precision")
+
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+list1 <- PrecisionCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- PrecisionCutoffInfo( train = afterSMOTE, test = test, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+
+
+
+
+### Confusion Matrix plots at different accuracy
+
+```{r}
+ConfusionMatrixInfo <- function( data, predict, actual, cutoff )
+{	
+	predict <- data[[predict]]
+	actual  <- relevel( as.factor( data[[actual]] ), "1" )
+	
+	result <- data.table( actual = actual, predict = predict )
+	result[ , type := ifelse( predict >= cutoff & actual == 1, "TP",
+					  ifelse( predict >= cutoff & actual == 0, "FP", 
+					  ifelse( predict <  cutoff & actual == 1, "FN", "TN" ) ) ) %>% as.factor() ]
+
+	# jittering : can spread the points along the x axis 
+	plot <- ggplot( result, aes( actual, predict, color = type ) ) + 
+			geom_violin( fill = "white", color = NA ) +
+			geom_jitter( shape = 1 ) + 
+			geom_hline( yintercept = cutoff, color = "blue", alpha = 0.6 ) + 
+			scale_y_continuous( limits = c( 0, 1 ) ) + 
+			scale_color_discrete( breaks = c( "TP", "FN", "FP", "TN" ) ) + # ordering of the legend 
+			guides( col = guide_legend( nrow = 2 ) ) + # adjust the legend to have two rows  
+			ggtitle( sprintf( "ConfusionMatrix Cutoff : %.2f", cutoff ) )
+
+	return( list( data = result, plot = plot ))
+}
+
+```
+
+
+```{r results='markup'}
+
+# visualize .6 cutoff (lowest point of the previous plot)
+# cm_info <- ConfusionMatrixInfo( data = test, predict = "prediction", 
+#                                 actual = "stroke", cutoff = .08 )
+# #ggthemr("flat")
+# cm_info$plot
+par(mfrow = c(1, 2))
+list1 <- ConfusionMatrixInfo( data = test, predict = "prediction", actual = "stroke", cutoff = .05 )
+list2 <- ConfusionMatrixInfo( data = testAfterSMOTE, predict = "prediction", actual = "stroke", cutoff = .40 )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2)
+
+
+```
+
+
+
+### Deciding the cut off level 
+```{r results}
+# setting the cut-off probablity
+# function to print confusion matrices for diffrent cut-off levels of probability
+#to get confusion matrix checking the max probability from the graph
+#for before SMOTE
+max_prob_b <- 0.2
+min_prob_b <- 0.001
+jump_b <-  0.01
+
+
+# making sequence of cut-off probabilities       
+cutoff_b <- seq( min_prob_b, max_prob_b, by = jump_b )
+CmFn <- function(cutoff,model) {
+       # predicting the test set results
+         modelPred <- predict(model, test, type = "response")
+         C1 <- ifelse(modelPred > cutoff, 1, 0)
+         C2 <- test$stroke
+         predY   <- as.factor(C1)
+         actualY <- as.factor(C2)
+        # use the confusionMatrix 
+        cm1 <-confusionMatrix(table(predY,actualY),positive="1")
+        print(cutoff)
+        print(cm1$table)
+        # extracting accuracy
+        Accuracy <- cm1$overall[1]
+        print(Accuracy)
+        # extracting sensitivity
+          Sensitivity <- cm1$byClass[1]
+        # extracting specificity
+          Specificity <- cm1$byClass[2]
+      # extracting value of Precision
+          Precision <- cm1$byClass[5]
+
+        # combined table
+          tab <- cbind(cutoff,Accuracy,Sensitivity,Specificity,Precision)
+        return(tab)}
+
+# loop using "lapply"
+#tab2    <- lapply(cutoff1, CmFn)
+tab_b    <- lapply(cutoff_b, CmFn,logitModel_b)
+#tab2 <- CmFn(logitModel1_a,test,cutoff1)
+tab_b
+       
+```
+
+```{r results='markup'}
+# max_prob_a <- 0.8
+# min_prob_a <- 0.001
+# jump_a <-  0.1
+# 
+# cutoff_a <- seq( min_prob_a, max_prob_a, by = jump_a )
+# tab_a <-lapply(cutoff_a, CmFn,logitModel_a)
+
+```
+
+
+### ROC - AUC Curve 
+
+#ROC Curve
+##for balanced dataset
+```{r}
+# loading the package
+
+library(pROC)
+#loadPkg("pROC") # receiver operating characteristic curve, gives the diagnostic ability of a binary classifier system as its discrimination threshold is varied. The curve is on sensitivity/recall/true-positive-rate vs false_alarm/false-positive-rate/fall-out.
+prob=predict(logitModel_b,test, type = "response")
+#Admit$prob=prob
+h <- roc(stroke~prob, data=test,levels = c(1, 0))
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
+
+##for unbalanced dataset 
+```{r results='markup'}
+prob=predict(logitModel_a,testAfterSMOTE, type = "response")
+#Admit$prob=prob
+h <- roc(stroke~prob, data=testAfterSMOTE)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
+
+```{r}
+preds <- predict(logitModel_b,test, type = "response")
+truess <- test$stroke
+
+dim(preds)
+dim(truess)
+
+head(preds)
+head(truess)
+#optimalCutoff(data.joined.testing$arrival_delayed, prob)[1] 
+```
+
+
+
+```{r results='markup'}
+# Predict
+pred = predict(logitModel_b,test, type = "response")
+# Store precision and recall scores at different cutoffs
+library(ROCR)
+predobj <- prediction(pred, test$stroke)
+perf <- performance(predobj,"rec", "prec")
+plot(perf)
+
+```
+
+```{r results='markup'}
+# computing a simple ROC curve (x-axis: fpr, y-axis: tpr)
+library(ROCR)
+pred <- prediction( pred, test$stroke)
+pred
+perf <- performance(pred,"tpr","fpr")
+perf
+plot(perf)
+
+# precision/recall curve (x-axis: recall, y-axis: precision)
+perf <- performance(pred, "prec", "rec")
+perf
+plot(perf)
+
+# sensitivity/specificity curve (x-axis: specificity,
+# y-axis: sensitivity)
+perf <- performance(pred, "sens", "spec")
+perf
+plot(perf)
 ```
