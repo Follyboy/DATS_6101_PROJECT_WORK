@@ -33,15 +33,9 @@ library(data.table)
 
 ##Loading both the datasets 
 ```{r results='markup'}
-beforeSMOTE <- data.frame(read.csv("beforeSmote.csv"))
-afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
-
-##dividing into glucose Groups
-beforeSMOTE$glucoseGroup=cut(beforeSMOTE$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
-#0-114 : Normal glucose level
-#114-140 : Prediabetes
-#140- infinity : Diabetes 
-
+beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
+afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
 
 ##Factoring the Categorical variables as before 
 beforeSMOTE$gender = factor(beforeSMOTE$gender)
@@ -71,11 +65,7 @@ cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
 PieChart(stroke, data = beforeSMOTE, hole = 0,
          fill = cols,
          labels_cex = 0.6)
-### After SMOTE
-cols <-  hcl.colors(length(levels(afterSMOTE$stroke)), "Fall")
-PieChart(stroke, data = afterSMOTE, hole = 0,
-         fill = cols,
-         labels_cex = 0.6)
+
 ```
 ```{r results='markup'}
 ### After SMOTE
