@@ -930,6 +930,12 @@ train <- modellingDataset[split1 == 0, ]
 #test split
 test <- modellingDataset[split1== 1, ] 
 ```
+
+Saving train dataBeforeSMOTE
+```{r results='markup'}
+write.csv(train,"trainDataBeforeSmote.csv", row.names = FALSE)
+```
+
 ```{r}
 train_0 <- subset(train,train$stroke==0)
 train_1 <- subset(train,train$stroke==1)
@@ -955,8 +961,8 @@ trainDataAfterSmote$glucoseGroup=cut(trainDataAfterSmote$avg_glucose_level, c(0,
 #Saving our cleaned Dataset 
 ##Before doing SMOTE and after doing SMOTE 
 ```{r results='markup'}
-afterSMOTE <- cleanData
-write.csv(beforeSMOTE,"beforeSMOTE.csv", row.names = FALSE)
+#afterSMOTE <- cleanData
+#write.csv(beforeSMOTE,"beforeSMOTE.csv", row.names = FALSE)
 # write.csv(afterSMOTE,"afterSMOTE.csv", row.names = FALSE)
 write.csv(trainDataAfterSmote,"trainDataAfterSmote.csv", row.names = FALSE)
 write.csv(test,"test.csv", row.names = FALSE)
