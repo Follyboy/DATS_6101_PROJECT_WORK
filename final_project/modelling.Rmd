@@ -20,9 +20,18 @@ library(lessR)
 ##Loading both the datasets 
 ```{r results='markup'}
 beforeSMOTE <- data.frame(read.csv("beforeSmote.csv"))
-afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
+# afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
 
 ```
+
+```{r results='asis'}
+beforeSMOTE$glucoseGroup=cut(beforeSMOTE$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+#0-114 : Normal glucose level
+#114-140 : Prediabetes
+#140- infinity : Diabetes 
+```
+
+
 
 ##Factoring the Categorical variables as before 
 ```{r results='markup'}
@@ -33,6 +42,7 @@ beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
 beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
 beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
 beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
+beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
 beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
 beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
 summary(beforeSMOTE)
@@ -46,6 +56,7 @@ afterSMOTE$work_type = factor(afterSMOTE$work_type)
 afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
 afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
 afterSMOTE$stroke = factor(afterSMOTE$stroke)
+afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
 summary(afterSMOTE)
 
 cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
@@ -67,40 +78,83 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 ```{r}
 #set it to beforeSMOTE/afterSMOTE
 
-#modellingDataset <- beforeSMOTE
-modellingDataset <- afterSMOTE
+modellingDataset <- beforeSMOTE
+
+#modellingDataset <- afterSMOTE
 ```
 
 
-## Splitting the dataset into train and test 
+## Splitting the dataset into train and test if using beforeSmote dataset
 ```{r}
-set.seed(123)  
-split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
-table(split1) 
-#train split
-train <- modellingDataset[split1 == 0, ]
-#test split
-test <- modellingDataset[split1== 1, ] 
+#set.seed(123)  
+#split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
+#table(split1) 
+##train split
+#train <- modellingDataset[split1 == 0, ]
+##test split
+#test <- modellingDataset[split1== 1, ] 
+```
+
+## Data already splitted for SMOTE case.
+```{r}
+train <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
 ```
 
 ###Logistic Regression
 ```{r results='markup'}
 # fit logistic regression model 
-logitModel <- glm(stroke~ gender+hypertension+ever_married+smoking_status+avg_glucose_level, 
+logitModel <- glm(stroke~ (age+hypertension+heart_disease+avg_glucose_level+gender+smoking_status)^3, 
                         data = train, 
                         family = binomial())
+#gender+hypertension+ever_married+smoking_status+avg_glucose_level
+#summary(logitModel)
+#logitModelList <- vector(mode = "list")
+logitModelList1 <-  glm(stroke~ ., data = train, family = binomial())
+logitModelList2 <-glm(stroke~ age+age:hypertension+age:heart_disease, data = train, family = binomial())
+logitModelList3 <- glm(stroke~ heart_disease:smoking_status + hypertension +age, data = train, family = binomial())
+logitModelList4 <-  glm(stroke~ (age+hypertension+heart_disease+avg_glucose_level)^3 , data = train, family = binomial())
+logitModelList5 <-  glm(stroke~ (age+hypertension+heart_disease+avg_glucose_level+gender+smoking_status)^3 , data = train, family = binomial())
 
-summary(logitModel)
+```
+
+```{r results='markup'}
+library(pscl)
+logitModelList6 <-  glm(stroke~ hypertension:avg_glucose_level+hypertension:avg_glucose_level:gender+age:hypertension:avg_glucose_level , data = train, family = binomial())
+logitModelList3 <-  glm(stroke~ (age +hypertension + heart_disease + ever_married + gender)^3 , data = train, family = binomial())
+pR2(logitModelList1)
+pR2(logitModelList2)
+pR2(logitModelList3)
+pR2(logitModelList4)
+pR2(logitModelList5)
+pR2(logitModelList6)
+
+
+AIC(logitModelList1)
+AIC(logitModelList2)
+AIC(logitModelList3)
+AIC(logitModelList4)
+AIC(logitModelList5)
+AIC(logitModelList6)
+summary(logitModelList3)
+#hypertension:avg_glucose_level + age + hypertension1:avg_glucose_level:genderMale +age:hypertension1:avg_glucose_level
+```
+```{r results='markup'}
+varImp(logitModel)
+library(pscl)
+pR2(logitModel)
 ```
 ```{r results }
 # prediction
 train$prediction <- predict( logitModel, newdata = train, type = "response" )
 test$prediction  <- predict( logitModel, newdata = test , type = "response" )
 
+temp <- beforeSMOTE
+temp$prediction  <- predict( logitModel, newdata = temp , type = "response" )
 # distribution of the prediction score grouped by known outcome
-ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
+ggplot( train, aes( prediction, color = as.factor(stroke) ) ) + 
 geom_density( size = 1 ) +
-ggtitle( "Testing Set's Predicted Score" ) #+ 
+ggtitle( "Training Set's Predicted Score" ) #+ 
 #scale_color_economist( name = "data", labels = c( "negative", "positive" ) ) + 
 #theme_economist()
 ```
@@ -134,19 +188,21 @@ library(data.table)
 AccuracyCutoffInfo <- function( train, test, predict, actual )
 {
 	# change the cutoff value's range as you please 
-	cutoff <- seq( .4, .8, by = .05 )
+	cutoff <- seq( .01, .9, by = .05 )
 
 	accuracy <- lapply( cutoff, function(c)
 	{
 		# use the confusionMatrix from the caret package
 	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
-		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
 		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
-		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
 			
 		dt <- data.table( cutoff = c,
 						  train  = cm_train$overall[["Accuracy"]],
-		 			      test   = cm_test$overall[["Accuracy"]] )
+		 			    test   = cm_test$overall[["Accuracy"]] )
+						  #train  = cm_train$byClass[["Sensitivity"]],
+		 			    #test   = cm_test$byClass[["Sensitivity"]] )
 		return(dt)
 	}) %>% rbindlist()
 
@@ -166,7 +222,64 @@ AccuracyCutoffInfo <- function( train, test, predict, actual )
 ```
 
 ```{r}
-AccuracyCutoffInfo( train = train_data, test = test_data, 
+AccuracyCutoffInfo( train = train, test = test, 
+                                     predict = "prediction", actual = "stroke" )
+
+```
+Sensitivity plot
+```{r results='markup'}
+# ------------------------------------------------------------------------------------------
+# [AccuracyCutoffInfo] : 
+# Obtain the accuracy on the trainining and testing dataset.
+# for cutoff value ranging from .4 to .8 ( with a .05 increase )
+# @train   : your data.table or data.frame type training data ( assumes you have the predicted score in it ).
+# @test    : your data.table or data.frame type testing data
+# @predict : prediction's column name (assumes the same for training and testing set)
+# @actual  : actual results' column name
+# returns  : 1. data : a data.table with three columns.
+#            		   each row indicates the cutoff value and the accuracy for the 
+#            		   train and test set respectively.
+# 			 2. plot : plot that visualizes the data.table
+
+AccuracyCutoffInfo <- function( train, test, predict, actual )
+{
+	# change the cutoff value's range as you please 
+	cutoff <- seq( .01, .9, by = .05 )
+
+	accuracy <- lapply( cutoff, function(c)
+	{
+		# use the confusionMatrix from the caret package
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						 # train  = cm_train$overall[["Accuracy"]],
+		 			    #  test   = cm_test$overall[["Accuracy"]] )
+						  train  = cm_train$byClass[["Sensitivity"]],
+		 			    test   = cm_test$byClass[["Sensitivity"]] )
+		return(dt)
+	}) %>% rbindlist()
+
+	# visualize the accuracy of the train and test set for different cutoff value 
+	# accuracy in percentage.
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Sensivity for Different Cutoff" )+
+	    ylab("Sensitivity")
+
+	return( list( data = accuracy, plot = plot ) )
+	
+	
+}
+```
+
+```{r}
+AccuracyCutoffInfo( train = train, test = test, 
                                      predict = "prediction", actual = "stroke" )
 
 ```
@@ -197,9 +310,9 @@ ConfusionMatrixInfo <- function( data, predict, actual, cutoff )
 			scale_y_continuous( limits = c( 0, 1 ) ) + 
 			scale_color_discrete( breaks = c( "TP", "FN", "FP", "TN" ) ) + # ordering of the legend 
 			guides( col = guide_legend( nrow = 2 ) ) + # adjust the legend to have two rows  
-			ggtitle( sprintf( "Confusion Matrix with Cutoff at %.2f", cutoff ) )
+			ggtitle( sprintf( "Confusion Matrix testing with Cutoff at %.2f", cutoff ) )
 
-	return( list( data = result, plot = plot ) )
+	return( list( data = result, plot = plot ))
 }
 
 ```
@@ -209,7 +322,7 @@ library(data.table)
 library(caret)
 # visualize .6 cutoff (lowest point of the previous plot)
 cm_info <- ConfusionMatrixInfo( data = test, predict = "prediction", 
-                                actual = "stroke", cutoff = .6 )
+                                actual = "stroke", cutoff = .08 )
 #ggthemr("flat")
 cm_info$plot
 ```
@@ -249,7 +362,7 @@ plot(logitModelPred,
 # setting the cut-off probablity
 # function to print confusion matrices for diffrent cut-off levels of probability
 #to get confusion matrix checking the max probability from the graph
-max_prob <- 0.3
+max_prob <- 0.8
 min_prob <- 0.001
 
 CmFn <- function(cutoff) {
@@ -262,7 +375,7 @@ CmFn <- function(cutoff) {
          actualY <- as.factor(C2)
 
         # use the confusionMatrix 
-        cm1 <-confusionMatrix(table(predY,actualY))
+        cm1 <-confusionMatrix(table(predY,actualY),positive="1")
         print(cutoff)
         print(cm1$table)
         # extracting accuracy
@@ -272,17 +385,17 @@ CmFn <- function(cutoff) {
           Sensitivity <- cm1$byClass[1]
         # extracting specificity
           Specificity <- cm1$byClass[2]
-      # extracting value of kappa
-          Kappa <- cm1$overall[2]
+      # extracting value of Precision
+          Precision <- cm1$byClass[5]
 
         # combined table
-          tab <- cbind(cutoff,Accuracy,Sensitivity,Specificity,Kappa)
+          tab <- cbind(cutoff,Accuracy,Sensitivity,Specificity,Precision)
         return(tab)}
 # making sequence of cut-off probabilities       
-cutoff1 <- seq( min_prob, max_prob, by = .05 )
+cutoff1 <- seq( min_prob, max_prob, by = .1 )
 # loop using "lapply"
 tab2    <- lapply(cutoff1, CmFn)
-#tab2
+tab2
        
 ```
 
@@ -360,7 +473,7 @@ plot(logitModelPred,
 # setting the cut-off probablity
 # function to print confusion matrices for different cut-off levels of probability
 #to get confusion matrix checking the max probability from the graph
-max_prob <- 0.15
+max_prob <- 0.16
 min_prob <- 0.001
 
 CmFn <- function(cutoff) {
@@ -396,4 +509,12 @@ cutoff1 <- seq( min_prob, max_prob, by = .05 )
 tab2    <- lapply(cutoff1, CmFn)
 tab2
        
+```
+
+
+Wald'd Test
+```{r results='markup'}
+install.packages("survey")
+library(survey)
+regTermTest(logitModel, "bmi")
 ```

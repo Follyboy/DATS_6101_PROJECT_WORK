@@ -1,0 +1,164 @@
+---
+title: "SummaryPaper"
+author: "Team 6"
+date: "2022-12-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Importing the required libraries
+```{r}
+library(caret)
+library(dplyr)
+library(lessR)
+#install.packages("gridExtra")               # Install gridExtra package
+library("gridExtra")
+
+# Useful functions when working with logistic regression
+library(ROCR)
+library(grid)
+library(caret)
+library(dplyr)
+library(scales)
+library(ggplot2)
+library(gridExtra)
+library(data.table)
+
+
+```
+
+##Loading both the datasets 
+```{r results='markup'}
+beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
+afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
+
+##Factoring the Categorical variables as before 
+beforeSMOTE$gender = factor(beforeSMOTE$gender)
+beforeSMOTE$hypertension = factor(beforeSMOTE$hypertension)
+beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
+beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
+beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
+beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
+beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
+beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
+beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
+summary(beforeSMOTE)
+
+#factoring the dataset
+afterSMOTE$gender = factor(afterSMOTE$gender)
+afterSMOTE$hypertension = factor(afterSMOTE$hypertension)
+afterSMOTE$heart_disease = factor(afterSMOTE$heart_disease)
+afterSMOTE$ever_married = factor(afterSMOTE$ever_married)
+afterSMOTE$work_type = factor(afterSMOTE$work_type)
+afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
+afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
+afterSMOTE$stroke = factor(afterSMOTE$stroke)
+afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
+summary(afterSMOTE)
+
+#testing 
+#factoring the dataset
+test$gender = factor(test$gender)
+test$hypertension = factor(test$hypertension)
+test$heart_disease = factor(test$heart_disease)
+test$ever_married = factor(test$ever_married)
+test$work_type = factor(test$work_type)
+test$Residence_type = factor(test$Residence_type)
+test$smoking_status = factor(test$smoking_status)
+test$stroke = factor(test$stroke)
+test$glucoseGroup = factor(test$glucoseGroup)
+summary(test)
+
+testAfterSMOTE <- test 
+cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
+PieChart(stroke, data = beforeSMOTE, hole = 0,
+         fill = cols,
+         labels_cex = 0.6)
+
+```
+```{r results='markup'}
+### After SMOTE
+cols <-  hcl.colors(length(levels(afterSMOTE$stroke)), "Fall")
+PieChart(stroke, data = afterSMOTE, hole = 0,
+         fill = cols,
+         labels_cex = 0.6)
+```
+
+
+
+## Logistic Regression on Original Dataset 
+```{r}
+logitModel1 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel2 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel3 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel4 <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+
+```
+
+## Plotting Training Set Prediction Score
+```{r results='markup'}
+
+beforeSMOTE$prediction <- predict( logitModel, newdata = beforeSMOTE, type = "response" )
+beforeSMOTE$prediction  <- predict( logitModel, newdata = test , type = "response" )
+par(mfrow = c(1, 2))
+ggp1 <- ggplot( train, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Training Set's Predicted Score" ) 
+
+ggp2 <- ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Set's Predicted Score" ) 
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+
+```{r results='markup'}
+# ------------------------------------------------------------------------------------------
+# [AccuracyCutoffInfo] : 
+# Obtain the accuracy on the trainining and testing dataset.
+# for cutoff value ranging from .4 to .8 ( with a .05 increase )
+# @train   : your data.table or data.frame type training data ( assumes you have the predicted score in it ).
+# @test    : your data.table or data.frame type testing data
+# @predict : prediction's column name (assumes the same for training and testing set)
+# @actual  : actual results' column name
+# returns  : 1. data : a data.table with three columns.
+#            		   each row indicates the cutoff value and the accuracy for the 
+#            		   train and test set respectively.
+# 			 2. plot : plot that visualizes the data.table
+
+AccuracyCutoffInfo <- function( train, test, predict, actual )
+{ 
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$overall[["Accuracy"]],
+		 			    test   = cm_test$overall[["Accuracy"]] )
+		return(dt)
+	}) %>% rbindlist()
+
+	# visualize the accuracy of the train and test set for different cutoff value 
+	# accuracy in percentage.
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Accuracy for Different Cutoff" )
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+
+```{r results='markup'}
+AccuracyCutoffInfo( train = train, test = test, predict = "prediction", actual = "stroke" )
+
+```

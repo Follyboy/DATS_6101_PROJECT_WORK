@@ -272,6 +272,7 @@ Replacing Missing Values for BMI with median.
 cleanData$bmi[is.na(cleanData$bmi)] <- median(cleanData$bmi, na.rm = T) #replacing NA values with median of the remaining bmi values.
 #summary(cleanData)
 beforeSMOTE <- cleanData
+beforeSMOTE$glucoseGroup=cut(beforeSMOTE$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
 ```
 
  
@@ -291,7 +292,7 @@ Before sampling : \
 ```{r results='markup'}
 #table(cleanData$stroke)
 #use SMOTE to create new dataset that is more balanced
-cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
+# cleanData <- SMOTE(stroke ~ ., cleanData, perc.over = 2000, perc.under = 200)
 #minority => 2000/100 =20 so 20*(strok1Observations=416) #upsampling 
 #200/100 =2, make the majority observation 2 time the minority observations #downsampling 
 
@@ -917,12 +918,54 @@ But as per our dataset, smoking status does not contribute to the stroke signifi
 
 Final file.
 
+```{r}
+nrow(cleanData)
+```
+```{r}
+set.seed(123)  
+split1<- sample(c(rep(0, 0.7 * nrow(cleanData)), rep(1, 0.3 * nrow(modellingDataset))))
+table(split1) 
+#train split
+train <- modellingDataset[split1 == 0, ]
+#test split
+test <- modellingDataset[split1== 1, ] 
+```
+
+Saving train dataBeforeSMOTE
+```{r results='markup'}
+write.csv(train,"trainDataBeforeSmote.csv", row.names = FALSE)
+```
+
+```{r}
+train_0 <- subset(train,train$stroke==0)
+train_1 <- subset(train,train$stroke==1)
+print(nrow(train_1))
+print(nrow(train_0))
+```
+
+```{r results='markup'}
+#table(cleanData$stroke)
+#use SMOTE to create new dataset that is more balanced
+trainDataAfterSmote <- SMOTE(stroke ~ ., train, perc.over = 2000, perc.under = 200)
+#minority => 2000/100 =20 so 20*(strok1Observations=416) #upsampling 
+#200/100 =2, make the majority observation 2 time the minority observations #downsampling 
+
+#view distribution of response variable in new dataset
+#table(cleanData$stroke)
+```
+
+```{r}
+trainDataAfterSmote$glucoseGroup=cut(trainDataAfterSmote$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+```
+
 #Saving our cleaned Dataset 
 ##Before doing SMOTE and after doing SMOTE 
 ```{r results='markup'}
-afterSMOTE <- cleanData
-write.csv(beforeSMOTE,"beforeSMOTE.csv", row.names = FALSE)
-write.csv(afterSMOTE,"afterSMOTE.csv", row.names = FALSE)
+#afterSMOTE <- cleanData
+#write.csv(beforeSMOTE,"beforeSMOTE.csv", row.names = FALSE)
+# write.csv(afterSMOTE,"afterSMOTE.csv", row.names = FALSE)
+write.csv(trainDataAfterSmote,"trainDataAfterSmote.csv", row.names = FALSE)
+write.csv(test,"test.csv", row.names = FALSE)
 ```
 
 

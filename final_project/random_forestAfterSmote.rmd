@@ -233,9 +233,12 @@ print(rf_cv5)
 ```
 
 
+```{r}
+head(train)
+```
 
 
-
+ 
 
 
 
