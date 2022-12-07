@@ -20,7 +20,7 @@ library(lessR)
 ##Loading both the datasets 
 ```{r results='markup'}
 beforeSMOTE <- data.frame(read.csv("beforeSmote.csv"))
-afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
+# afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
 
 ```
 
@@ -68,19 +68,25 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 #set it to beforeSMOTE/afterSMOTE
 
 #modellingDataset <- beforeSMOTE
-modellingDataset <- afterSMOTE
+#modellingDataset <- afterSMOTE
 ```
 
 
-## Splitting the dataset into train and test 
+## Splitting the dataset into train and test if using beforeSmote dataset
 ```{r}
-set.seed(123)  
-split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
-table(split1) 
-#train split
-train <- modellingDataset[split1 == 0, ]
-#test split
-test <- modellingDataset[split1== 1, ] 
+#set.seed(123)  
+#split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
+#table(split1) 
+##train split
+#train <- modellingDataset[split1 == 0, ]
+##test split
+#test <- modellingDataset[split1== 1, ] 
+```
+
+## Data already splitted for SMOTE case.
+```{r}
+train <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
 ```
 
 ###Logistic Regression
