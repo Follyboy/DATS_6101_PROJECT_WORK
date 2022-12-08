@@ -230,7 +230,7 @@ partialPlot(rfBS3, beforeSMOTE, age, "1")
 
 ```{r}
 library(pROC)
-rf_predictionBS <- predict(rfBS, test, type = "prob")
+rf_predictionBS <- predict(rfBS3, test, type = "prob")
 ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
 ROC_rf_aucBS <- auc(ROC_rfBS)
 plot(ROC_rfBS, col = "green", main = "ROC For Random Forest")

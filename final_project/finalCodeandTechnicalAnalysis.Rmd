@@ -1,0 +1,459 @@
+---
+title: "finalCodeandTechnicalAnalysis"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Importing the required libraries
+```{r}
+library(caret)
+library(dplyr)
+library("pROC")
+```
+
+
+##Factoring the Categorical variables as before 
+```{r results='markup'}
+##Loading both the datasets 
+beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
+afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
+
+##Factoring the Categorical variables as before 
+beforeSMOTE$gender = factor(beforeSMOTE$gender)
+beforeSMOTE$hypertension = factor(beforeSMOTE$hypertension)
+beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
+beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
+beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
+beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
+beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
+beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
+beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
+summary(beforeSMOTE)
+
+#factoring the dataset
+afterSMOTE$gender = factor(afterSMOTE$gender)
+afterSMOTE$hypertension = factor(afterSMOTE$hypertension)
+afterSMOTE$heart_disease = factor(afterSMOTE$heart_disease)
+afterSMOTE$ever_married = factor(afterSMOTE$ever_married)
+afterSMOTE$work_type = factor(afterSMOTE$work_type)
+afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
+afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
+afterSMOTE$stroke = factor(afterSMOTE$stroke)
+afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
+summary(afterSMOTE)
+
+#testing 
+#factoring the dataset
+test$gender = factor(test$gender)
+test$hypertension = factor(test$hypertension)
+test$heart_disease = factor(test$heart_disease)
+test$ever_married = factor(test$ever_married)
+test$work_type = factor(test$work_type)
+test$Residence_type = factor(test$Residence_type)
+test$smoking_status = factor(test$smoking_status)
+test$stroke = factor(test$stroke)
+test$glucoseGroup = factor(test$glucoseGroup)
+summary(test)
+```
+
+### After SMOTE
+```{r}
+# cols <-  hcl.colors(length(levels(afterSMOTE$stroke)), "Fall")
+# PieChart(stroke, data = afterSMOTE, hole = 0,
+#          fill = cols,
+#          labels_cex = 0.6)
+```
+
+## Setting the variable for checking  for Before SMOTE
+```{r}
+#set it to beforeSMOTE
+
+modellingDataset1 <- beforeSMOTE
+
+head(modellingDataset1)
+
+# convert categorical variables to numerical except our response variable
+data <- dummyVars("stroke ~ .", data = modellingDataset1, fullRank = T)
+custom_train_data1 <- data.frame(predict(data, newdata = modellingDataset1))
+
+test_data <- dummyVars("stroke ~ .", data = test, fullRank = T)
+custom_test_data1 <- data.frame(predict(test_data, newdata = test))
+
+length(custom_train_data1)
+head(custom_train_data1)
+```
+
+* We used the `dummyVars` function, which creates dummy variables, to convert our categorical variables to numerical variables in order to run those variables with our `KNN` function.
+
+
+## Splitting the dataset into train and test for Before SMOTE
+```{r}
+library(dplyr)
+
+set.seed(123)  
+split1<- sample(c(rep(0, 1.0 * nrow(custom_train_data1))))
+
+
+split1.trainLabels <- modellingDataset1[split1==0, 11]
+split1.testLabels <- test[, 11]
+```
+
+
+* We have separated the x variables from our response variable (`stroke`), but before we separated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
+
+
+##KNN for Before SMOTE
+```{r, results='markup'}
+library(ezids)
+library(FNN)
+library(gmodels)
+library(caret)
+
+
+ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
+
+for (kval in 3:15) {
+  prediction <- knn(train = custom_train_data1, test = custom_test_data1, cl=split1.trainLabels, k=kval)
+
+  cm = confusionMatrix(prediction, reference = split1.testLabels )
+
+  cmaccu = cm$overall['Accuracy']
+
+  cmt = data.frame(k=kval, Total.Accuracy = cmaccu, row.names = NULL )
+  ResultDf = rbind(ResultDf, cmt)
+}
+
+xkabledply(ResultDf, "Total Accuracy Summary")
+best_accuracy <- ResultDf[which.max(ResultDf$Total.Accuracy),]
+k_value <- best_accuracy$k
+
+pred_best <- knn(train =custom_train_data1, test = custom_test_data1, cl=split1.trainLabels, k=k_value, prob=TRUE)
+PREDCross_best <- CrossTable(split1.testLabels, pred_best, prop.chisq = FALSE)
+cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
+
+xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
+xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
+
+```
+
+* Most of our data before using our sampling technique had result of people without strokes, so this affected our results for our KNN prediction. This is why we do not have predictions of individuals prone to stroke. 
+
+* According to our accuracy summary using k-values between 3 to 15 for our original data, our best accuracy model is with a k-value of `k-value`. 
+
+* From our confusion matrix, we can say that the accuracy of this model is `(9793 + 0)/9995 = 0.9798`, therefore we can say that this model is 97.98% accurate.
+
+
+```{r, results='markup'}
+# For KNN Model for Before SMOTE
+h <- roc(split1.testLabels, attributes(pred_best)$prob)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
+
+* We have here the area-under-curve of `auc(h)`, which is less than 0.8. This test shows that this model is not considered a good fit.
+
+
+## Setting the variable for checking 
+```{r}
+#set it to afterSMOTE
+
+modellingDataset2 <- afterSMOTE
+modellingDataset2 <- modellingDataset2 %>% relocate(stroke, .after=glucoseGroup)
+
+head(modellingDataset2)
+
+# convert categorical variables to numerical except our response variable
+data2 <- dummyVars("stroke ~ .", data = modellingDataset2, fullRank = T)
+custom_train_data2 <- data.frame(predict(data2, newdata = modellingDataset2))
+
+length(custom_train_data2)
+head(custom_train_data2)
+```
+
+
+## Splitting the dataset into train and test for After SMOTE
+```{r}
+library(dplyr)
+
+set.seed(123)  
+split2<- sample(c(rep(0, 1.0 * nrow(custom_train_data2))))
+
+split2.trainLabels <- modellingDataset2[split2==0, 12]
+```
+
+
+##KNN for After SMOTE
+```{r, results='markup'}
+
+library(FNN)
+library(gmodels)
+library(caret)
+
+
+ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
+
+for (kval in 3:15) {
+  prediction <- knn(train = custom_train_data2, test = custom_test_data1, cl=split2.trainLabels, k=kval)
+
+  cm = confusionMatrix(prediction, reference = split1.testLabels )
+
+  cmaccu = cm$overall['Accuracy']
+
+  cmt = data.frame(k=kval, Total.Accuracy = cmaccu, row.names = NULL )
+  ResultDf = rbind(ResultDf, cmt)
+}
+
+xkabledply(ResultDf, "Total Accuracy Summary")
+best_accuracy <- ResultDf[which.max(ResultDf$Total.Accuracy),]
+k_value <- best_accuracy$k
+
+pred_best <- knn(train = custom_train_data2, test = custom_test_data1, cl=split2.trainLabels, k=k_value, prob=TRUE)
+PREDCross_best <- CrossTable(split1.testLabels, pred_best, prop.chisq = FALSE)
+cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
+
+xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
+xkabledply(data.frame(cm_best$byClass), title=paste("k = ",k_value))
+
+```
+
+* According to our accuracy summary using k-values between 3 to 15 for our original data, our best accuracy model is with a k-value of `k-value`. 
+
+* From our confusion matrix, we can say that the accuracy of this model is `(8407 + 90)/9995 = 0.8501`, therefore we can say that this model is 85.01% accurate.
+
+#Plot ROC-AUC
+```{r, results='markup'}
+# For KNN Model for After SMOTE
+h <- roc(split1.testLabels, attributes(pred_best)$prob)
+auc(h) # area-under-curve prefer 0.8 or higher.
+plot(h)
+```
+
+* We have here the area-under-curve of `auc(h)`, which is less than 0.8. This test shows that this model is not considered a good fit but it is way better than the previous model that used our original data before SMOTE.
+
+```{r}
+chooseK = function(k, train_set, val_set, train_class, val_class){
+  
+  # Build knn with k neighbors considered.
+  set.seed(1)
+  class_knn = knn(train = train_set,    #<- training set cases
+                  test = val_set,       #<- test set cases
+                  cl = train_class,     #<- category for classification
+                  k = k) #,                #<- number of neighbors considered
+                  # use.all = TRUE)       #<- control ties between class assignments. If true, all distances equal to the k-th largest are included
+  
+  tab = table(class_knn, val_class)
+  
+  # Calculate the accuracy.
+  accu = sum(tab[row(tab) == col(tab)]) / sum(tab)                         
+  cbind(k = k, accuracy = accu)
+}
+
+# The sapply() function plugs in several values into our chooseK function.
+# function(x)[function] allows you to apply a series of numbers
+# to a function without running a for() loop.
+knn_different_k = sapply(seq(1, 21, by = 2),  #<- set k to be odd number from 1 to 21
+                         function(x) chooseK(x, 
+                                             train_set = custom_train_data2,
+                                             val_set = custom_test_data1,
+                                             train_class = modellingDataset2[split2==0, 12],
+                                             val_class = test[, 11]))
+
+# Reformat the results to graph the results.
+str(knn_different_k)
+knn_different_k = data.frame(k = knn_different_k[1,],
+                             accuracy = knn_different_k[2,])
+
+# Plot accuracy vs. k.
+# install.packages("ggplot2")
+loadPkg("ggplot2")
+
+ggplot(knn_different_k, aes(x = k, y = accuracy)) +
+  geom_line(color = "orange", size = 1.5) +
+  geom_point(size = 3) + 
+  labs(title = "accuracy vs k")
+
+``` 
+
+
+
+##Random Forest
+
+```{r, results='markup'}
+rfBS <- randomForest(stroke~., data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf <- randomForest(stroke~., data=afterSMOTE, proximity=TRUE)  #afterSMOTE
+```
+
+```{r, results='markup'}
+predict_testBS = predict(rfBS, test) #beforeSMOTE
+confusionMatrix(predict_testBS, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test = predict(rf, test) #afterSMOTE
+confusionMatrix(predict_test, test$stroke)
+```
+
+```{r, results='markup'}
+rfBS2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #model2 randomForest beforeSMOTE
+rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=afterSMOTE, proximity=TRUE)  #model2 randomForest afterSMOTE
+```
+
+```{r, results='markup'}
+predict_testBS2 = predict(rfBS2, test)  # beforeSMOTE
+confusionMatrix(predict_testBS2, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test2 = predict(rf2, test)  #afterSMOTE
+confusionMatrix(predict_test2, test$stroke)
+```
+
+
+```{r, results='markup'}
+rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
+```
+
+```{r, results='markup'}
+predict_testBS3 = predict(rfBS3, test)  #beforeSMOTE
+confusionMatrix(predict_testBS3, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test3 = predict(rf3, test)  #afterSMOTE
+confusionMatrix(predict_test3, test$stroke)
+```
+
+
+
+```{r}
+trControl <- trainControl(method = "cv",
+    number = 10,
+    search = "grid")
+```
+
+```{r}
+# rf_cv <- train(stroke~.,    # we tried gridSearch CV to get the best accuracy, but it seems maximum accuracy is achieved by running it one time.
+#     data = afterSMOTE,      # so commented this code as it takes a very long time to run the full code.
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv)
+
+```
+
+
+```{r}
+# rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv1)
+
+```
+
+```{r}
+# rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv2)
+
+```
+
+
+```{r, results='markup'}
+rfBS4 <- randomForest(stroke~bmi+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #beforeSMOTE
+rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=afterSMOTE, proximity=TRUE)   #afterSMOTE
+```
+
+
+```{r, results='markup'}
+predict_testBS4 = predict(rfBS4, test)   #beforeSMOTE
+confusionMatrix(predict_testBS4, test$stroke)
+```
+
+
+```{r, results='markup'}
+predict_test4 = predict(rf4, test)   #aftersMOTE
+confusionMatrix(predict_test4, test$stroke)
+```
+
+
+```{r, results='markup'}
+rfBS5 <- randomForest(stroke~age, data=beforeSMOTE, proximity=TRUE)    #beforeSMOTE
+rf5 <- randomForest(stroke~age, data=afterSMOTE, proximity=TRUE)     #afterSMOTE
+```
+
+```{r, results='markup'}  
+predict_testBS5 = predict(rfBS5, test)         #beforeSMOTE
+confusionMatrix(predict_testBS5, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test5 = predict(rf5, test)    #afterSMOTE
+confusionMatrix(predict_test5, test$stroke) 
+```
+
+
+###Variable Importance Plots for beforeSMOTE dataset
+```{r, results='markup'}
+varImpPlot(rfBS)
+varImpPlot(rfBS2)
+varImpPlot(rfBS3)
+varImpPlot(rfBS5)
+```
+
+
+###Variable Importance Plots for afterSMOTE dataset
+```{r, results='markup'}
+varImpPlot(rf)
+varImpPlot(rf2)
+varImpPlot(rf3)
+varImpPlot(rf5)
+```
+
+
+###ROC curve beforeSMOTE dataset
+```{r, results='markup'}
+library(pROC)
+rf_predictionBS <- predict(rfBS3, test, type = "prob")
+ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
+ROC_rf_aucBS <- auc(ROC_rfBS)
+plot(ROC_rfBS, col = "green", main = "ROC For Random Forest beforeSMOTE")
+
+paste("Area under curve of random forest: ", ROC_rf_aucBS)
+
+```
+
+
+###ROC curve afterSMOTE dataset
+```{r}
+library(pROC)
+rf_prediction <- predict(rf, test, type = "prob")
+ROC_rf <- roc(test$stroke, rf_prediction[,2])
+ROC_rf_auc <- auc(ROC_rf)
+plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
+
+paste("Area under curve of random forest: ", ROC_rf_auc)
+
+```
