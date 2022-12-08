@@ -18,35 +18,24 @@ library(lessR)
 library(randomForest)
 ```
 
-
-##Loading both the datasets 
-```{r results='markup'}
-beforeSMOTE <- data.frame(read.csv("beforeSmote.csv"))
-afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
-
-```
-
-```{r results='asis'}
-beforeSMOTE$glucoseGroup=cut(beforeSMOTE$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
-#0-114 : Normal glucose level
-#114-140 : Prediabetes
-#140- infinity : Diabetes 
-```
-
-
-
 ##Factoring the Categorical variables as before 
 ```{r results='markup'}
 #factoring the dataset
+##Loading both the datasets 
+beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
+afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
+
+##Factoring the Categorical variables as before 
 beforeSMOTE$gender = factor(beforeSMOTE$gender)
 beforeSMOTE$hypertension = factor(beforeSMOTE$hypertension)
 beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
 beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
 beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
 beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
+beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
 beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
 beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
-beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
 summary(beforeSMOTE)
 
 #factoring the dataset
@@ -60,6 +49,19 @@ afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
 afterSMOTE$stroke = factor(afterSMOTE$stroke)
 afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
 summary(afterSMOTE)
+
+#testing 
+#factoring the dataset
+test$gender = factor(test$gender)
+test$hypertension = factor(test$hypertension)
+test$heart_disease = factor(test$heart_disease)
+test$ever_married = factor(test$ever_married)
+test$work_type = factor(test$work_type)
+test$Residence_type = factor(test$Residence_type)
+test$smoking_status = factor(test$smoking_status)
+test$stroke = factor(test$stroke)
+test$glucoseGroup = factor(test$glucoseGroup)
+summary(test)
 
 cols <-  hcl.colors(length(levels(beforeSMOTE$stroke)), "Fall")
 PieChart(stroke, data = beforeSMOTE, hole = 0,
@@ -76,67 +78,43 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 ```
 
 
-## Setting the variable for checking 
-```{r}
-#set it to beforeSMOTE/afterSMOTE
 
-modellingDataset <- beforeSMOTE
-#modellingDataset <- afterSMOTE
-```
-
-
-## Splitting the dataset into train and test 
-```{r}
-library(dplyr)
-
-set.seed(123)  
-split1<- sample(c(rep(0, 0.7 * nrow(modellingDataset)), rep(1, 0.3 * nrow(modellingDataset))))
-table(split1) 
-#train split
-train <- modellingDataset[split1 == 0, ]
-#test split
-test <- modellingDataset[split1== 1, ] 
-
-train <- train %>% relocate(stroke, .after=glucoseGroup)
-test <- test %>% relocate(stroke, .after=glucoseGroup)
+```{r, results='markup'}
+rfBS <- randomForest(stroke~., data=beforeSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
-rf <- randomForest(stroke~., data=train, proximity=TRUE)
+summary(rfBS)
 ```
 
 ```{r, results='markup'}
-summary(rf)
-```
-
-```{r, results='markup'}
-predict_test = predict(rf, test)
-confusionMatrix(predict_test, test$stroke)
+predict_testBS = predict(rfBS, test)
+confusionMatrix(predict_testBS, test$stroke)
 ```
 ```{r}
-head(train)
+head(beforeSMOTE)
 ```
 
 ```{r, results='markup'}
-rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=train, proximity=TRUE)
+rfBS2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
-predict_test2 = predict(rf2, test)
-confusionMatrix(predict_test2, test$stroke)
+predict_testBS2 = predict(rfBS2, test)
+confusionMatrix(predict_testBS2, test$stroke)
 ```
 
 ```{r, results='markup'}
-rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=train, proximity=TRUE)
+rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
-predict_test3 = predict(rf3, test)
-confusionMatrix(predict_test3, test$stroke)
+predict_testBS3 = predict(rfBS3, test)
+confusionMatrix(predict_testBS3, test$stroke)
 ```
 
 ```{r}
-print(rf3)
+print(rfBS3)
 ```
 ```{r}
 trControl <- trainControl(method = "cv",
@@ -145,120 +123,121 @@ trControl <- trainControl(method = "cv",
 ```
 
 ```{r}
-rf_cv <- train(stroke~.,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv)
+# rf_cvBS <- train(stroke~.,
+#     data = train,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cvBS)
 
 ```
 
 
 ```{r}
-rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv1)
+# rf_cvBS1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
+#     data = beforeSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cvBS1)
 
 ```
 
 
 
 ```{r}
-rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv2)
+# rf_cvBS2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
+#     data = beforeSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cvBS2)
 
 ```
 
-```{r}
-summary(train)
-```
 
 
 ```{r}
-plot(rf)
-plot(rf2)
-plot(rf3)
+plot(rfBS)
+plot(rfBS2)
+plot(rfBS3)
 ```
 
 ```{r}
-varImpPlot(rf)
+varImpPlot(rfBS)
 ```
 ```{r}
-varImpPlot(rf2)
+varImpPlot(rfBS2)
 ```
 
 ```{r}
-varImpPlot(rf3)
+varImpPlot(rfBS3)
 ```
 ```{r}
-colnames(train)
+colnames(beforeSMOTE)
 ```
 
 
 
 ```{r, results='markup'}
-rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=train, proximity=TRUE)
-print(rf4)
+rfBS4 <- randomForest(stroke~bmi+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)
+print(rfBS4)
 ```
 
 ```{r, results='markup'}
-rf5 <- randomForest(stroke~age, data=train, proximity=TRUE)
-print(rf5)
+rfBS5 <- randomForest(stroke~age, data=beforeSMOTE, proximity=TRUE)
+print(rfBS5)
 ```
 
 
 
 ```{r, results='markup'}
-predict_test4 = predict(rf4, test)
-confusionMatrix(predict_test4, test$stroke)
+predict_testBS4 = predict(rfBS4, test)
+confusionMatrix(predict_testBS4, test$stroke)
 ```
 
 ```{r, results='markup'}
-predict_test5 = predict(rf5, test)
-confusionMatrix(predict_test5, test$stroke)
+predict_testBS5 = predict(rfBS5, test)
+confusionMatrix(predict_testBS5, test$stroke)
 ```
 
 
 ```{r}
-rf_cv5 <- train(stroke~age,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv5)
+# rf_cvBS5 <- train(stroke~age,
+#     data = beforeSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cvBS5)
 
 ```
 
-
-```{r}
-summary(train)
-```
 ```{r}
 summary(test)
 ```
 
 
 
+```{r}
+partialPlot(rfBS3, beforeSMOTE, age, "1")
+```
 
 
 
+```{r}
+library(pROC)
+rf_predictionBS <- predict(rfBS, test, type = "prob")
+ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
+ROC_rf_aucBS <- auc(ROC_rfBS)
+plot(ROC_rfBS, col = "green", main = "ROC For Random Forest")
 
+paste("Area under curve of random forest: ", ROC_rf_aucBS)
 
-
-
-
+```
 
 
 
