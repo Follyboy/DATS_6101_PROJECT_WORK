@@ -16,41 +16,6 @@ library("pROC")
 ```
 
 
-##Loading both the datasets 
-```{r results='markup'}
-beforeSMOTE <- data.frame(read.csv("beforeSmote.csv"))
-afterSMOTE <- data.frame(read.csv("afterSmote.csv"))
-
-```
-
-##Factoring the Categorical variables as before 
-```{r results='markup'}
-# #factoring the dataset
-# beforeSMOTE$gender = factor(beforeSMOTE$gender)
-# beforeSMOTE$hypertension = factor(beforeSMOTE$hypertension)
-# beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
-# beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
-# beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
-# beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
-# beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
-# beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
-# #beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
-# summary(beforeSMOTE)
-# 
-# #factoring the dataset
-# afterSMOTE$gender = factor(afterSMOTE$gender)
-# afterSMOTE$hypertension = factor(afterSMOTE$hypertension)
-# afterSMOTE$heart_disease = factor(afterSMOTE$heart_disease)
-# afterSMOTE$ever_married = factor(afterSMOTE$ever_married)
-# afterSMOTE$work_type = factor(afterSMOTE$work_type)
-# afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
-# afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
-# afterSMOTE$stroke = factor(afterSMOTE$stroke)
-# afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
-# summary(afterSMOTE)
-
-```
-
 ##Factoring the Categorical variables as before 
 ```{r results='markup'}
 ##Loading both the datasets 
