@@ -375,7 +375,7 @@ confusionMatrix(predict_testBS2, test$stroke)
 predict_test2 = predict(rf2, test)  #afterSMOTE
 confusionMatrix(predict_test2, test$stroke)
 ```
-The same thing is observed for model2 with formula `r formula(rf2)`.\
+The same thing is observed for model2`.\
 Precision is much better for afterSMOTE dataset.\
 
 ```{r, results='markup'}
@@ -393,7 +393,7 @@ predict_test3 = predict(rf3, test)  #afterSMOTE
 confusionMatrix(predict_test3, test$stroke)
 ```
 
-Checking the precision of afterSMOTE model3 `r formula(rf3)`\
+Checking the precision of afterSMOTE model3\
 Precision = `r 108/(108/1565)`\
 Precision has improved if compared to model1 and model2.\
 
@@ -527,7 +527,7 @@ ROC_rf_auc <- auc(ROC_rf)
 plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
 
 ```
-According to the precision values, model3 (`r formula(rf3)`) is performing best in random forest.\
+According to the precision values, model3 is performing best in random forest.\
 When comparing the ROC curve for beforeSMOTE and afterSMOTE models, AUC value is much higher for ROC afterSMOTE model.\
 AUC for beforeSMOTE model: 0.65800\
 AUC for afterSMOTE model: 0.77455\
