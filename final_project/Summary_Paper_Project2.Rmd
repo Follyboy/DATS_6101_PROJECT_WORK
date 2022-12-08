@@ -15,7 +15,7 @@ Importing the required libraries
 library(caret)
 library(dplyr)
 library(lessR)
-#install.packages("gridExtra")               # Install gridExtra package
+#install.packages("gridExtra")              
 library("gridExtra")
 library(tidyr)
 # Useful functions when working with logistic regression
@@ -129,20 +129,29 @@ Training After SMOTE
 #before smote training
 logitModel1_b <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
 logitModel2_b <- glm(stroke~ age + age:hypertension + age:heart_disease +age:avg_glucose_level, data = beforeSMOTE, family = binomial())
-logitModel3_b <- glm(stroke~ age*hypertension + age*heart_disease +age*avg_glucose_level, data = beforeSMOTE, family = binomial())
-logitModel4_b <- glm(stroke~ (age + avg_glucose_level)^2 , data = beforeSMOTE, family = binomial())
+logitModel3_b <- glm(stroke~  age*heart_disease +age*avg_glucose_level, data = beforeSMOTE, family = binomial())
+logitModel4_b <- glm(stroke~ (age+heart_disease+ glucoseGroup)^2 , data = beforeSMOTE, family = binomial())
 logitModel5_b <- glm(stroke~ (age + glucoseGroup)^2 , data = beforeSMOTE, family = binomial())
 
 #after smote training
 logitModel1_a <- glm(stroke~ ., data = afterSMOTE, family = binomial())
 logitModel2_a <- glm(stroke~ age + age:hypertension + age:heart_disease +age:avg_glucose_level, data = afterSMOTE, family = binomial())
-logitModel3_a <- glm(stroke~ age*hypertension + age*heart_disease +age*avg_glucose_level, data = afterSMOTE, family = binomial())
-logitModel4_a <- glm(stroke~ (age +avg_glucose_level)^2, data = afterSMOTE, family = binomial())
+logitModel3_a <- glm(stroke~ age*heart_disease +age*avg_glucose_level, data = afterSMOTE, family = binomial())
+logitModel4_a <- glm(stroke~ (age+heart_disease+ glucoseGroup)^2, data = afterSMOTE, family = binomial())
 logitModel5_a <- glm(stroke~ (age + glucoseGroup)^2, data = afterSMOTE, family = binomial())
 
 #selecting model for furter analysis of code
-logitModel_b <-logitModel1_b
-logitModel_a <- logitModel1_a
+logitModel_b <-logitModel5_b
+logitModel_a <- logitModel5_a
+```
+
+
+```{r results='markup'}
+ anova(logitModel1_b, logitModel2_b,logitModel3_b,logitModel4_b,logitModel5_b,test="Chisq")
+```
+
+
+```{r results='markup'}
 summary(logitModel_b)
 summary(logitModel_a)
 ```
@@ -159,14 +168,7 @@ pR2(logitModel_a)
 AIC(logitModel_a)
 ```
 
-##test
-```{r}
-# testDataAfterSmote <- SMOTE(stroke ~ ., test, perc.over = 2000, perc.under = 100)
-# train_0 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==0)
-# train_1 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==1)
-# print(nrow(train_1))
-# print(nrow(train_0))
-```
+
 
 ## Plotting Training Set Prediction Score
 Before SMOTE
@@ -423,7 +425,7 @@ PrecisionCutoffInfo <- function( train, test, predict, actual )
 ```{r results='markup'}
 par(mfrow = c(1, 2))
 list1 <- PrecisionCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
-list2<- PrecisionCutoffInfo( train = afterSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- PrecisionCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
 ggp1 <- list1$plot
 ggp2 <- list2$plot
 grid.arrange(ggp1, ggp2, ncol = 2) 
@@ -436,7 +438,7 @@ so now since after the cut off of 0.25, no value is predicted as 1 by the model,
 ### F1 Score versus cutoff 
 
 ```{r results='markup'}
-SensitivityCutoffInfo <- function( train, test, predict, actual )
+FOneCutoffInfo <- function( train, test, predict, actual )
 {
 	cutoff <- seq( .01, .9, by = .05 )
 	accuracy <- lapply( cutoff, function(c)
@@ -466,8 +468,8 @@ SensitivityCutoffInfo <- function( train, test, predict, actual )
 
 ```{r results='markup'}
 par(mfrow = c(1, 2))
-list1 <- SensitivityCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
-list2<- SensitivityCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
+list1 <- FOneCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- FOneCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
 ggp1 <- list1$plot
 ggp2 <- list2$plot
 grid.arrange(ggp1, ggp2, ncol = 2) 
@@ -480,20 +482,29 @@ Confusion Matrix at high F1 score
 Before SMOTE
 
 ```{r results='markup'}
-c_b <- 0.02
-c_a <- 0.6
+c_b <- 0.025
+
 beforeSMOTEpred <- as.factor( as.numeric( test[["prediction"]] > c_b ) )
-cm_train <- confusionMatrix(beforeSMOTEpred, as.factor(test$stroke),positive="1" )
-cm_train
-```
-After SMOTE
-```{r results='markup'}
-c_a <- 0.30
-afterSMOTEpred <- as.factor( as.numeric( testAfterSMOTE[["prediction"]] > c_a ) )
-cm_train <- confusionMatrix(afterSMOTEpred, as.factor(testAfterSMOTE$stroke),positive="1" )
-cm_train
+cm_test_b <- confusionMatrix(beforeSMOTEpred, as.factor(test$stroke),positive="1" )
+cm_test_b
+
 ```
 
+* F1 score : `r cm_test_b$byClass[["F1"]]`
+* Sensitivity  : `r cm_test_b$byClass[["Sensitivity"]]`
+* Precision  : `r cm_test_b$byClass[["Precision"]]`
+
+After SMOTE
+```{r results='markup'}
+c_a <- 0.25
+afterSMOTEpred <- as.factor( as.numeric( testAfterSMOTE[["prediction"]] > c_a ) )
+cm_test_a <- confusionMatrix(afterSMOTEpred, as.factor(testAfterSMOTE$stroke),positive="1" )
+cm_test_a
+```
+
+* F1 score : `r cm_test_a$byClass[["F1"]]` 
+* Sensitivity  : `r cm_test_a$byClass[["Sensitivity"]]`
+* Precision  : `r cm_test_a$byClass[["Precision"]]`
 
 ### Deciding the cut off level 
 ```{r results}
@@ -501,8 +512,8 @@ cm_train
 # function to print confusion matrices for diffrent cut-off levels of probability
 #to get confusion matrix checking the max probability from the graph
 #for before SMOTE
-max_prob_b <- 0.2
-min_prob_b <- 0.001
+max_prob_b <- max(test$prediction)
+min_prob_b <- min(test$prediction)
 jump_b <-  0.01
 
 
@@ -543,12 +554,12 @@ tab_b
 ```
 
 ```{r results='markup'}
-# max_prob_a <- 0.8
-# min_prob_a <- 0.001
-# jump_a <-  0.1
-# 
-# cutoff_a <- seq( min_prob_a, max_prob_a, by = jump_a )
-# tab_a <-lapply(cutoff_a, CmFn,logitModel_a)
+max_prob_a <- max(testAfterSMOTE)
+min_prob_a <- min(testAfterSMOTE$prediction)
+jump_a <-  0.1
+
+cutoff_a <- seq( min_prob_a, max_prob_a, by = jump_a )
+tab_a <-lapply(cutoff_a, CmFn,logitModel_a)
 
 ```
 
@@ -646,10 +657,10 @@ plot(h)
 ```
 
 
-Here we can observe the improvement in ROC and PR curve. Since we have significant number of 0 and 1 values.
+Here we can observe the improvement in ROC, AUC=0.88 and PR curve. Since we have significant number of 0 and 1 values.
 
 ```{r results='markup'}
 
-list2<- SensitivityCutoffInfo( train = afterSMOTE, test = testDataAfterSmote, predict = "prediction", actual = "stroke" )
+list2<- FOneCutoffInfo( train = afterSMOTE, test = testDataAfterSmote, predict = "prediction", actual = "stroke" )
 list2$plot
 ```
