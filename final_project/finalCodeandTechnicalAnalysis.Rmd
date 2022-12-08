@@ -113,7 +113,8 @@ split1.testLabels <- test[, 11]
 ```
 
 
-* We have separated the x variables from our response variable (`stroke`), but before we separated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
+
+* We have separated the x variables from our response variable (`stroke`), but before we sparated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
 
 
 ##KNN for Before SMOTE
@@ -286,6 +287,7 @@ ggplot(knn_different_k, aes(x = k, y = accuracy)) +
   geom_point(size = 3) + 
   labs(title = "accuracy vs k")
 
+
 ``` 
 
 
@@ -457,3 +459,5 @@ plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
 paste("Area under curve of random forest: ", ROC_rf_auc)
 
 ```
+
+
