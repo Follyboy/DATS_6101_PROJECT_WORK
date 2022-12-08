@@ -72,33 +72,34 @@ PieChart(stroke, data = afterSMOTE, hole = 0,
 ```
 
 
-## Setting the variable for checking 
-```{r}
-#set it to beforeSMOTE/afterSMOTE
-
-#train <- beforeSMOTE
-train <- afterSMOTE
-```
 
 ```{r, results='markup'}
-rf <- randomForest(stroke~., data=train, proximity=TRUE)
+rf <- randomForest(stroke~., data=afterSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
 summary(rf)
 ```
 
+We made a randomForest with all the variables here, to check the dependency of all the variables in randomForest.\
+
 ```{r, results='markup'}
 predict_test = predict(rf, test)
 confusionMatrix(predict_test, test$stroke)
 ```
+When checking the confusion Matrix of the `rf`, accuracy is around 87.8%. But accuracy is not a very good representation of how well the model is working on our dataset.\
+The reason we say this is because our dataset is imbalanced. So there are going to be multiple right predictions when there is no stroke. Hence, accuracy of our model is going to increase.\ 
+Since, our dataset is a medical dataset, precision is a better choice as compared to accuracy, sensitivity, and recall.\
+In this model: precision is = `r 74/(74+1091)`
+
+
 
 ```{r}
-head(train)
+head(afterSMOTE)
 ```
 
 ```{r, results='markup'}
-rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=train, proximity=TRUE)
+rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=afterSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
@@ -107,7 +108,7 @@ confusionMatrix(predict_test2, test$stroke)
 ```
 
 ```{r, results='markup'}
-rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=train, proximity=TRUE)
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
@@ -125,44 +126,42 @@ trControl <- trainControl(method = "cv",
 ```
 
 ```{r}
-rf_cv <- train(stroke~.,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv)
+# rf_cv <- train(stroke~.,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv)
 
 ```
 
 
 ```{r}
-rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv1)
+# rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv1)
 
 ```
 
 
 
 ```{r}
-rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv2)
+# rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv2)
 
 ```
 
-```{r}
-summary(train)
-```
+
 
 
 ```{r}
@@ -184,18 +183,18 @@ varImpPlot(rf3)
 ```
 
 ```{r}
-colnames(train)
+colnames(afterSMOTE)
 ```
 
 
 
 ```{r, results='markup'}
-rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=train, proximity=TRUE)
+rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=afterSMOTE, proximity=TRUE)
 print(rf4)
 ```
 
 ```{r, results='markup'}
-rf5 <- randomForest(stroke~age, data=train, proximity=TRUE)
+rf5 <- randomForest(stroke~age, data=afterSMOTE, proximity=TRUE)
 print(rf5)
 ```
 
@@ -207,35 +206,41 @@ confusionMatrix(predict_test4, test$stroke)
 
 ```{r, results='markup'}
 predict_test5 = predict(rf5, test)
-confusionMatrix(predict_test5, test$stroke)
+confusionMatrix(predict_test5, test$stroke) 
 ```
 
 
 ```{r}
-rf_cv5 <- train(stroke~age,
-    data = train,
-    method = "rf",
-    metric = "Accuracy",
-    trControl = trControl)
-# Print the results
-print(rf_cv5)
+# rf_cv5 <- train(stroke~age,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv5)
 
 ```
+
 
 
 ```{r}
-head(train)
+partialPlot(rf3, afterSMOTE, age, "1")
 ```
-
-
  
+This plot tells us that over the age of 50, higher chances of getting a brain stroke.\
 
 
 
+```{r}
+library(pROC)
+rf_prediction <- predict(rf, test, type = "prob")
+ROC_rf <- roc(test$stroke, rf_prediction[,2])
+ROC_rf_auc <- auc(ROC_rf)
+plot(ROC_rf, col = "green", main = "ROC For Random Forest")
 
+paste("Area under curve of random forest: ", ROC_rf_auc)
 
-
-
+```
 
 
 
