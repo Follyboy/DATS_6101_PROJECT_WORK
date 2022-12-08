@@ -340,18 +340,18 @@ ggplot(knn_different_k, aes(x = k, y = accuracy)) +
 ##Random Forest
 
 ```{r, results='markup'}
-# rfBS <- randomForest(stroke~., data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
-# rf <- randomForest(stroke~., data=afterSMOTE, proximity=TRUE)  #afterSMOTE
+rfBS <- randomForest(stroke~., data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf <- randomForest(stroke~., data=afterSMOTE, proximity=TRUE)  #afterSMOTE
 ```
 
 ```{r, results='markup'}
-# predict_testBS = predict(rfBS, test) #beforeSMOTE
-# confusionMatrix(predict_testBS, test$stroke)
+predict_testBS = predict(rfBS, test) #beforeSMOTE
+confusionMatrix(predict_testBS, test$stroke)
 ```
 
 ```{r, results='markup'}
-# predict_test = predict(rf, test) #afterSMOTE
-# confusionMatrix(predict_test, test$stroke)
+predict_test = predict(rf, test) #afterSMOTE
+confusionMatrix(predict_test, test$stroke)
 ```
 
 If we compare accuracy of the models (beforeSMOTE and afterSMOTE model), `accuracy` is higher for beforeSMOTE model. But if we check the confusion matrix, beforeSMOTE model is not giving any TRUE positive value. So, accuracy is not a very good indicator to assess the model.\
@@ -362,35 +362,35 @@ and for `rf`, precision = `r 73/(73+1099)`\
 So, we can see that afterSMOTE model is performing much better when it comes to predict the TRUE positives.\
 
 ```{r, results='markup'}
-# rfBS2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #model2 randomForest beforeSMOTE
-# rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=afterSMOTE, proximity=TRUE)  #model2 randomForest afterSMOTE
+rfBS2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #model2 randomForest beforeSMOTE
+rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=afterSMOTE, proximity=TRUE)  #model2 randomForest afterSMOTE
 ```
 
 ```{r, results='markup'}
-# predict_testBS2 = predict(rfBS2, test)  # beforeSMOTE
-# confusionMatrix(predict_testBS2, test$stroke)
+predict_testBS2 = predict(rfBS2, test)  # beforeSMOTE
+confusionMatrix(predict_testBS2, test$stroke)
 ```
 
 ```{r, results='markup'}
-# predict_test2 = predict(rf2, test)  #afterSMOTE
-# confusionMatrix(predict_test2, test$stroke)
+predict_test2 = predict(rf2, test)  #afterSMOTE
+confusionMatrix(predict_test2, test$stroke)
 ```
 The same thing is observed for model2 with formula `r formula(rf2)`.\
 Precision is much better for afterSMOTE dataset.\
 
 ```{r, results='markup'}
-# rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
-# rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
+rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
 ```
 
 ```{r, results='markup'}
-# predict_testBS3 = predict(rfBS3, test)  #beforeSMOTE
-# confusionMatrix(predict_testBS3, test$stroke)
+predict_testBS3 = predict(rfBS3, test)  #beforeSMOTE
+confusionMatrix(predict_testBS3, test$stroke)
 ```
 
 ```{r, results='markup'}
-# predict_test3 = predict(rf3, test)  #afterSMOTE
-# confusionMatrix(predict_test3, test$stroke)
+predict_test3 = predict(rf3, test)  #afterSMOTE
+confusionMatrix(predict_test3, test$stroke)
 ```
 
 Checking the precision of afterSMOTE model3 `r formula(rf3)`\
@@ -439,57 +439,57 @@ Precision has improved if compared to model1 and model2.\
 
 
 ```{r, results='markup'}
-# rfBS4 <- randomForest(stroke~bmi+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #beforeSMOTE
-# rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=afterSMOTE, proximity=TRUE)   #afterSMOTE
+rfBS4 <- randomForest(stroke~bmi+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #beforeSMOTE
+rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=afterSMOTE, proximity=TRUE)   #afterSMOTE
 ```
 
 Since age is the most important factor for our random forest, so we tried removing age in the formula and keeping just the numeric variables.\
 
 ```{r, results='markup'}
-# predict_testBS4 = predict(rfBS4, test)   #beforeSMOTE
-# confusionMatrix(predict_testBS4, test$stroke)
+predict_testBS4 = predict(rfBS4, test)   #beforeSMOTE
+confusionMatrix(predict_testBS4, test$stroke)
 ```
 
 
 ```{r, results='markup'}
-# predict_test4 = predict(rf4, test)   #aftersMOTE
-# confusionMatrix(predict_test4, test$stroke)
+predict_test4 = predict(rf4, test)   #aftersMOTE
+confusionMatrix(predict_test4, test$stroke)
 ```
 As we can see from the results, precision dropped quite a bit. As it is only predicting 40 True positives.\
 We can say that age is a very important predictor for our dataset.\
 
 ```{r}
-# rfBS5 <- randomForest(stroke~age, data=beforeSMOTE, proximity=TRUE)    #beforeSMOTE
+rfBS5 <- randomForest(stroke~age, data=beforeSMOTE, proximity=TRUE)    #beforeSMOTE
 ```
 
 ```{r}
-# rf5 <- randomForest(stroke~age, data=afterSMOTE, proximity=TRUE)     #afterSMOTE
+rf5 <- randomForest(stroke~age, data=afterSMOTE, proximity=TRUE)     #afterSMOTE
 ```
 
 ```{r}  
-# predict_testBS5 = predict(rfBS5, test)         #beforeSMOTE
-# confusionMatrix(predict_testBS5, test$stroke)
+predict_testBS5 = predict(rfBS5, test)         #beforeSMOTE
+confusionMatrix(predict_testBS5, test$stroke)
 ```
 
 ```{r}
-# predict_test5 = predict(rf5, test)    #afterSMOTE
-# confusionMatrix(predict_test5, test$stroke) 
+predict_test5 = predict(rf5, test)    #afterSMOTE
+confusionMatrix(predict_test5, test$stroke)
 ```
 
 
 ###Variable Importance Plots for beforeSMOTE dataset
 ```{r, results='markup'}
-# varImpPlot(rfBS)
-# varImpPlot(rfBS2)
-# varImpPlot(rfBS3)
+varImpPlot(rfBS)
+varImpPlot(rfBS2)
+varImpPlot(rfBS3)
 ```
 
 
 ###Variable Importance Plots for afterSMOTE dataset
 ```{r, results='markup'}
-# varImpPlot(rf)
-# varImpPlot(rf2)
-# varImpPlot(rf3)
+varImpPlot(rf)
+varImpPlot(rf2)
+varImpPlot(rf3)
 ```
 From the variable importance plots,\
 in beforeSMOTE models -> avg_glucose_level, bmi are more important as compared to age and the difference between the three is not very high.\
@@ -498,8 +498,8 @@ The MeanDecreaseGini measures the Gini importance = how important the features a
 
 
 ```{r, results='markup'}
-# partialPlot(rfBS3, afterSMOTE, age, "1")
-# partialPlot(rf3, afterSMOTE, age, "1")
+partialPlot(rfBS3, afterSMOTE, age, "1")
+partialPlot(rf3, afterSMOTE, age, "1")
 ```
 We plotted a partial plot of dependence of age on getting a stroke.\
 There are a few differences between the two plots, but overall they both are showing the same thing that higher age people tend to be more prone to stroke.\
@@ -510,12 +510,10 @@ There are a few differences between the two plots, but overall they both are sho
 ###ROC curve beforeSMOTE dataset
 ```{r, results='markup'}
 library(pROC)
-# rf_predictionBS <- predict(rfBS3, test, type = "prob")
-# ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
-# ROC_rf_aucBS <- auc(ROC_rfBS)
-# plot(ROC_rfBS, col = "green", main = "ROC For Random Forest beforeSMOTE")
-# 
-# paste("Area under curve of random forest: ", ROC_rf_aucBS)
+rf_predictionBS <- predict(rfBS3, test, type = "prob")
+ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
+ROC_rf_aucBS <- auc(ROC_rfBS)
+plot(ROC_rfBS, col = "green", main = "ROC For Random Forest beforeSMOTE")
 
 ```
 
@@ -523,12 +521,10 @@ library(pROC)
 ###ROC curve afterSMOTE dataset
 ```{r}
 library(pROC)
-# rf_prediction <- predict(rf3, test, type = "prob")
-# ROC_rf <- roc(test$stroke, rf_prediction[,2])
-# ROC_rf_auc <- auc(ROC_rf)
-# plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
-# 
-# paste("Area under curve of random forest: ", ROC_rf_auc)
+rf_prediction <- predict(rf3, test, type = "prob")
+ROC_rf <- roc(test$stroke, rf_prediction[,2])
+ROC_rf_auc <- auc(ROC_rf)
+plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
 
 ```
 According to the precision values, model3 (`r formula(rf3)`) is performing best in random forest.\
@@ -983,16 +979,16 @@ prob=predict(logitModel_b,test, type = "response")
 #Admit$prob=prob
 h <- roc(stroke~prob, data=test,levels = c(1, 0))
 auc(h) # area-under-curve prefer 0.8 or higher.
-plot(h)
+plot(h,main="ROC-plot Before SMOTE")
 ```
 
-##for unbalanced dataset 
+##After SMOTEbalanced dataset 
 ```{r results='markup'}
 prob=predict(logitModel_a,testAfterSMOTE, type = "response")
 #Admit$prob=prob
-h <- roc(stroke~prob, data=testAfterSMOTE)
-auc(h) # area-under-curve prefer 0.8 or higher.
-plot(h,main="ROC plot")
+h_logistic <- roc(stroke~prob, data=testAfterSMOTE)
+auc(h_logistic) # area-under-curve prefer 0.8 or higher.
+plot(h_logistic,main="ROC plot- After SMOTE")
 
 ```
 
@@ -1075,6 +1071,15 @@ ggtitle( "Testing Set's Predicted Score after SMOTE" )
 
 Conclusion : 
 
-* we cannot upsample more datapoints in medical dataset so we will need to ask for more enteries with the disease
+* we cannot upsample more datapoints in medical dataset so we will need to ask for more entries with the disease
 * or more significant terms for the model
+
+
+```{r, results='markup'}
+plot(ROC_rf, col = "green", main = "ROC For all the three models")
+plot(h, add=TRUE, col="red")
+plot(h_logistic, add=TRUE, col='blue')
+legend(0.3,0.4,legend=c("Random Forest", "Logistic Regression", "KNN"), 
+       fill = c("green","blue", "red"))
+```
 
