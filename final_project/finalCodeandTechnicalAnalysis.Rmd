@@ -113,6 +113,7 @@ split1.testLabels <- test[, 11]
 ```
 
 
+
 * We have separated the x variables from our response variable (`stroke`), but before we sparated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
 
 
@@ -286,4 +287,177 @@ ggplot(knn_different_k, aes(x = k, y = accuracy)) +
   geom_point(size = 3) + 
   labs(title = "accuracy vs k")
 
-```  
+
+``` 
+
+
+
+##Random Forest
+
+```{r, results='markup'}
+rfBS <- randomForest(stroke~., data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf <- randomForest(stroke~., data=afterSMOTE, proximity=TRUE)  #afterSMOTE
+```
+
+```{r, results='markup'}
+predict_testBS = predict(rfBS, test) #beforeSMOTE
+confusionMatrix(predict_testBS, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test = predict(rf, test) #afterSMOTE
+confusionMatrix(predict_test, test$stroke)
+```
+
+```{r, results='markup'}
+rfBS2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #model2 randomForest beforeSMOTE
+rf2 <- randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level, data=afterSMOTE, proximity=TRUE)  #model2 randomForest afterSMOTE
+```
+
+```{r, results='markup'}
+predict_testBS2 = predict(rfBS2, test)  # beforeSMOTE
+confusionMatrix(predict_testBS2, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test2 = predict(rf2, test)  #afterSMOTE
+confusionMatrix(predict_test2, test$stroke)
+```
+
+
+```{r, results='markup'}
+rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
+```
+
+```{r, results='markup'}
+predict_testBS3 = predict(rfBS3, test)  #beforeSMOTE
+confusionMatrix(predict_testBS3, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test3 = predict(rf3, test)  #afterSMOTE
+confusionMatrix(predict_test3, test$stroke)
+```
+
+
+
+```{r}
+trControl <- trainControl(method = "cv",
+    number = 10,
+    search = "grid")
+```
+
+```{r}
+# rf_cv <- train(stroke~.,    # we tried gridSearch CV to get the best accuracy, but it seems maximum accuracy is achieved by running it one time.
+#     data = afterSMOTE,      # so commented this code as it takes a very long time to run the full code.
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv)
+
+```
+
+
+```{r}
+# rf_cv1 <- train(stroke~age+hypertension+heart_disease+avg_glucose_level,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv1)
+
+```
+
+```{r}
+# rf_cv2 <- train(stroke~age:hypertension+age:heart_disease+bmi,
+#     data = afterSMOTE,
+#     method = "rf",
+#     metric = "Accuracy",
+#     trControl = trControl)
+# # Print the results
+# print(rf_cv2)
+
+```
+
+
+```{r, results='markup'}
+rfBS4 <- randomForest(stroke~bmi+avg_glucose_level, data=beforeSMOTE, proximity=TRUE)  #beforeSMOTE
+rf4 <- randomForest(stroke~bmi+avg_glucose_level, data=afterSMOTE, proximity=TRUE)   #afterSMOTE
+```
+
+
+```{r, results='markup'}
+predict_testBS4 = predict(rfBS4, test)   #beforeSMOTE
+confusionMatrix(predict_testBS4, test$stroke)
+```
+
+
+```{r, results='markup'}
+predict_test4 = predict(rf4, test)   #aftersMOTE
+confusionMatrix(predict_test4, test$stroke)
+```
+
+
+```{r, results='markup'}
+rfBS5 <- randomForest(stroke~age, data=beforeSMOTE, proximity=TRUE)    #beforeSMOTE
+rf5 <- randomForest(stroke~age, data=afterSMOTE, proximity=TRUE)     #afterSMOTE
+```
+
+```{r, results='markup'}  
+predict_testBS5 = predict(rfBS5, test)         #beforeSMOTE
+confusionMatrix(predict_testBS5, test$stroke)
+```
+
+```{r, results='markup'}
+predict_test5 = predict(rf5, test)    #afterSMOTE
+confusionMatrix(predict_test5, test$stroke) 
+```
+
+
+###Variable Importance Plots for beforeSMOTE dataset
+```{r, results='markup'}
+varImpPlot(rfBS)
+varImpPlot(rfBS2)
+varImpPlot(rfBS3)
+varImpPlot(rfBS5)
+```
+
+
+###Variable Importance Plots for afterSMOTE dataset
+```{r, results='markup'}
+varImpPlot(rf)
+varImpPlot(rf2)
+varImpPlot(rf3)
+varImpPlot(rf5)
+```
+
+
+###ROC curve beforeSMOTE dataset
+```{r, results='markup'}
+library(pROC)
+rf_predictionBS <- predict(rfBS3, test, type = "prob")
+ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
+ROC_rf_aucBS <- auc(ROC_rfBS)
+plot(ROC_rfBS, col = "green", main = "ROC For Random Forest beforeSMOTE")
+
+paste("Area under curve of random forest: ", ROC_rf_aucBS)
+
+```
+
+
+###ROC curve afterSMOTE dataset
+```{r}
+library(pROC)
+rf_prediction <- predict(rf, test, type = "prob")
+ROC_rf <- roc(test$stroke, rf_prediction[,2])
+ROC_rf_auc <- auc(ROC_rf)
+plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
+
+paste("Area under curve of random forest: ", ROC_rf_auc)
+
+```
+
+
