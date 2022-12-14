@@ -1,0 +1,101 @@
+---
+title: "SummaryPaper"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    code_folding: hide
+    number_sections: false
+    toc: yes
+    toc_depth: 3
+    toc_float: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '3'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+```
+
+Importing the required libraries
+```{r}
+library(caret)
+library(dplyr)
+library("pROC")
+library(randomForest)
+
+library(lessR)
+#install.packages("gridExtra")              
+library("gridExtra")
+library(tidyr)
+# Useful functions when working with logistic regression
+library(ROCR)
+library(grid)
+library(caret)
+library(scales)
+library(ggplot2)
+library(gridExtra)
+library(data.table)
+library(caret)
+library(pscl)
+library(DMwR)
+```
+
+
+##Factoring the Categorical variables as before 
+```{r results='markup'}
+##Loading both the datasets 
+beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
+afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
+test <- data.frame(read.csv("test.csv"))
+
+##Factoring the Categorical variables as before 
+beforeSMOTE$gender = factor(beforeSMOTE$gender)
+beforeSMOTE$hypertension = factor(beforeSMOTE$hypertension)
+beforeSMOTE$heart_disease = factor(beforeSMOTE$heart_disease)
+beforeSMOTE$ever_married = factor(beforeSMOTE$ever_married)
+beforeSMOTE$work_type = factor(beforeSMOTE$work_type)
+beforeSMOTE$Residence_type = factor(beforeSMOTE$Residence_type)
+beforeSMOTE$glucoseGroup = factor(beforeSMOTE$glucoseGroup)
+beforeSMOTE$smoking_status = factor(beforeSMOTE$smoking_status)
+beforeSMOTE$stroke = factor(beforeSMOTE$stroke)
+summary(beforeSMOTE)
+
+#factoring the dataset
+afterSMOTE$gender = factor(afterSMOTE$gender)
+afterSMOTE$hypertension = factor(afterSMOTE$hypertension)
+afterSMOTE$heart_disease = factor(afterSMOTE$heart_disease)
+afterSMOTE$ever_married = factor(afterSMOTE$ever_married)
+afterSMOTE$work_type = factor(afterSMOTE$work_type)
+afterSMOTE$Residence_type = factor(afterSMOTE$Residence_type)
+afterSMOTE$smoking_status = factor(afterSMOTE$smoking_status)
+afterSMOTE$stroke = factor(afterSMOTE$stroke)
+afterSMOTE$glucoseGroup = factor(afterSMOTE$glucoseGroup)
+summary(afterSMOTE)
+
+#testing 
+#factoring the dataset
+test$gender = factor(test$gender)
+test$hypertension = factor(test$hypertension)
+test$heart_disease = factor(test$heart_disease)
+test$ever_married = factor(test$ever_married)
+test$work_type = factor(test$work_type)
+test$Residence_type = factor(test$Residence_type)
+test$smoking_status = factor(test$smoking_status)
+test$stroke = factor(test$stroke)
+test$glucoseGroup = factor(test$glucoseGroup)
+summary(test)
+```
+
+## number of rows in test dataset
+```{r}
+test_0 <- subset(test,test$stroke==0)
+test_1 <- subset(test,test$stroke==1)
+
+train_0 <- subset(beforeSMOTE,beforeSMOTE$stroke==0)
+train_1 <- subset(beforeSMOTE,beforeSMOTE$stroke==1)
+
+train_0a <- subset(afterSMOTE,afterSMOTE$stroke==0)
+train_1a <- subset(afterSMOTE,afterSMOTE$stroke==1)
+
+```
