@@ -1,5 +1,6 @@
 ---
-title: "SummaryPaper"
+title: "Cerebral Stroke Prediction Based on Physiological Factors (Project 2)"
+author: "TEAM 6"
 date: "`r Sys.Date()`"
 output:
   html_document:
@@ -14,16 +15,31 @@ output:
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE, warning = FALSE)
+knitr::opts_chunk$set(echo = FALSE, warning = FALSE, message = FALSE)
 ```
 
-Importing the required libraries
-```{r}
+
+## **INTRODUCTION**
+First, what is a stroke? A stroke is a medical condition that occurs when the blood supply is blocked to parts of the brain or when a blood vessel in the brain bursts. The main risk factor for stroke is high blood pressure; other risk factors include high blood cholesterol and tobacco smoking.
+The goal of our project is to diagnose whether a person is prone to develop a stroke or not based on ten generic physiological factors.\
+
+The aim of this project is to predict the probability of the person having brain stroke based on the physiological factors and then classifying them into `having stroke` or `not having stroke`.\
+
+We have framed multiple SMART questions that we will answer as we proceed with our project.\
+
+We have focused on three modeling techniques:\
+$1.$ K NEAREST NEIGHBOR\
+$2.$ RANDOM FOREST\
+$3.$ LOGISTIC REGRESSION\
+
+
+```{r, include=FALSE}
 library(caret)
 library(dplyr)
 library("pROC")
 library(randomForest)
 
+library(pROC)
 library(lessR)
 #install.packages("gridExtra")              
 library("gridExtra")
@@ -39,11 +55,18 @@ library(data.table)
 library(caret)
 library(pscl)
 library(DMwR)
+library(ezids)
+library(FNN)
+library(gmodels)
+library(caret)
+library(FNN)
+library(gmodels)
+library(caret)
+library(dplyr)
+
 ```
-
-
-##Factoring the Categorical variables as before 
-```{r results='markup'}
+ 
+```{r include=FALSE}
 ##Loading both the datasets 
 beforeSMOTE <- data.frame(read.csv("trainDataBeforeSmote.csv"))
 afterSMOTE <- data.frame(read.csv("trainDataAfterSmote.csv"))
@@ -87,7 +110,6 @@ test$glucoseGroup = factor(test$glucoseGroup)
 summary(test)
 ```
 
-## number of rows in test dataset
 ```{r}
 test_0 <- subset(test,test$stroke==0)
 test_1 <- subset(test,test$stroke==1)
@@ -100,7 +122,6 @@ train_1a <- subset(afterSMOTE,afterSMOTE$stroke==1)
 
 ```
 
-## Setting the variable for checking  for Before SMOTE
 ```{r}
 #set it to beforeSMOTE
 
@@ -125,12 +146,9 @@ split1.trainLabels <- modellingDataset1[split1==0, 11]
 split1.testLabels <- test[, 11]
 ```
 
-##KNN for Before SMOTE
+# **K NEAREST NEIGHBOR**
+## **KNN for Before SMOTE**
 ```{r, results='markup'}
-library(ezids)
-library(FNN)
-library(gmodels)
-library(caret)
 
 
 ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
@@ -199,24 +217,24 @@ ggplot(knn_different_k, aes(x = k, y = accuracy)) +
 * According to the accuracy graph using k-values between 1 to 21 for our original data, our best accuracy model is with a k-value of `k_value1`. But looking at it, we have multiple values which would give us an accurate model, this is due to the fact that over 98% of our data set are made up of individuals that are not prone to stroke.
 
 ```{r, results='markup'}
-pred_best <- knn(train =custom_train_data1, test = custom_test_data1, cl=split1.trainLabels, k=k_value, prob=TRUE)
+pred_best <- knn(train =custom_train_data1, test = custom_test_data1, cl=split1.trainLabels, k=k_value1, prob=TRUE)
 cm_best = confusionMatrix(pred_best, reference = split1.testLabels )
-xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value))
+xkabledply(as.matrix(cm_best), title = paste("ConfusionMatrix for k = ",k_value1))
 ```
 
 * After plotting a confusion matrix for our original data set, we noticed we had no predictions of individuals that would be prone to stroke which didn't help our research. But the accuracy of the model being `0.9798`, meant that the model was 97.98% accurate.
 
 
-```{r, results='markup'}
+```{r, results='hide'}
 # For KNN Model for Before SMOTE
 h <- roc(split1.testLabels, attributes(pred_best)$prob)
 plot(h)
 ```
 
+
 * After plotting the ROC graph, we see the area-under-curve of `auc(h)`, which is less than 0.8. This test shows that this model is not considered a good fit.
 
 
-## Setting the variable for checking 
 ```{r, results='markup'}
 #set it to afterSMOTE
 
@@ -228,11 +246,8 @@ data2 <- dummyVars("stroke ~ .", data = modellingDataset2, fullRank = T)
 custom_train_data2 <- data.frame(predict(data2, newdata = modellingDataset2))
 ```
 
-
-## Splitting the dataset into train and test for After SMOTE
+## **Finding The Best K**
 ```{r}
-library(dplyr)
-
 set.seed(123)  
 split2<- sample(c(rep(0, 1.0 * nrow(custom_train_data2))))
 
@@ -240,11 +255,6 @@ split2.trainLabels <- modellingDataset2[split2==0, 12]
 ```
 
 ```{r, results='markup'}
-
-library(FNN)
-library(gmodels)
-library(caret)
-
 
 ResultDf = data.frame( k=numeric(0), Total.Accuracy= numeric(0), row.names = NULL )
 
@@ -316,12 +326,589 @@ ggplot(knn_different_k, aes(x = k, y = accuracy)) +
 ``` 
 
 
-* According to the accuracy graph using k-values between 1 to 21 for our data set after using the SMOTE technique, our best accuracy model is with a k-value of `k_value`. Looking at this graph, we have a better visualization of the value which would give us an accurate model than our previous accuracy graph, this is because the SMOTE technique improved our data set by giving us more predictions on individuals that are prone to stroke, it did not give us a lot of true positive values, but it improved our results.
+* According to the accuracy graph using k-values between 1 to 21 for our data set after using the SMOTE technique, our best accuracy model is with a k-value of `r k_value`. Looking at this graph, we have a better visualization of the value which would give us an accurate model than our previous accuracy graph, this is because the SMOTE technique improved our data set by giving us more predictions on individuals that are prone to stroke, it did not give us a lot of true positive values, but it improved our results.
 
 
 ```{r, results='markup'}
 # For KNN Model for After SMOTE
-h <- roc(split1.testLabels, attributes(pred_best)$prob)
-plot(h)
+h_KNN <- roc(split1.testLabels, attributes(pred_best)$prob)
+plot(h_KNN)
 ```
-*After plotting the ROC graph, we see the area-under-curve of `auc(h)`, which is less than 0.8. This graph shows that this model is not considered a good fit but it is way better than the previous model that used our original data before using our SMOTE technique.
+
+* After plotting the ROC graph, we see the area-under-curve of `r auc(h)`, which is less than 0.8. This graph shows that this model is not considered a good fit but it is way better than the previous model that used our original data before using our SMOTE technique.
+
+
+
+# **RANDOM FOREST**
+
+We ran different combinations of variables on our random forest model.\
+We did a comparison of different models on beforeSMOTE dataset and afterSMOTE dataset.\
+
+Different random forest models as per their variables combinations are as follows:\
+
+* Model1: randomForest(stroke~.)\
+-> To check the dependence of all variables on the output variable, stroke.\
+
+* Model2: randomForest(stroke~age+hypertension+heart_disease+avg_glucose_level)\
+-> Model2 was on the variables which were the most important as per our initial EDA.\
+
+* Model3: randomForest(stroke~age:hypertension+age:heart_disease+bmi)\
+-> From our initial EDA, we found out about the correlation between different regressors, so tried to incorporate interaction terms.\
+
+Since our dataset is imbalanced, we would be more interested in precision value of the model.\
+
+```{r}
+rfBS3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=beforeSMOTE, proximity=TRUE) #beforeSMOTE
+rf3 <- randomForest(stroke~age:hypertension+age:heart_disease+bmi, data=afterSMOTE, proximity=TRUE)
+```
+
+```{r}
+predict_testBS3 = predict(rfBS3, test)  #beforeSMOTE
+confusionMatrix(predict_testBS3, test$stroke)
+```
+
+```{r}
+predict_test3 = predict(rf3, test)  #afterSMOTE
+confusionMatrix(predict_test3, test$stroke)
+```
+## **Variable Importance Plots for beforeSMOTE Dataset**
+```{r, results='markup'}
+varImpPlot(rfBS3)
+```
+
+## **Variable Importance Plots for afterSMOTE Dataset**
+```{r}
+varImpPlot(rf3)
+```
+
+From the variable importance plots,\
+in beforeSMOTE models -> avg_glucose_level, bmi are more important as compared to age and the difference between the three is not very high.\
+an afterSMOTE models -> age is a much more important predictor as compared to bmi and avg_glucose_level.\
+The MeanDecreaseGini measures the Gini importance = how important the features are over all splits done in the tree/forest - whereas for each individual split the Gini importance indicates how much the Gini criterion = "inequality/heterogeneity" was reduced using this split.\
+
+### **SMART QUESTION 2**
+**Question**: *Which variable has the most impact on stroke?*\
+The above variable importance plor answers our smart question 2.\
+So for beforeSMOTE dataset, avg_glucose_level is the most important regressor but in the afterSMOTE dataset i.e. it has the most impact on the stroke, age is the most important regressor i.e. age has the most impact on stroke\.
+
+## **ROC curve beforeSMOTE dataset**
+```{r}
+
+rf_predictionBS <- predict(rfBS3, test, type = "prob")
+ROC_rfBS <- roc(test$stroke, rf_predictionBS[,2])
+ROC_rf_aucBS <- auc(ROC_rfBS)
+plot(ROC_rfBS, col = "green", main = "ROC For Random Forest beforeSMOTE")
+
+```
+
+## **ROC curve afterSMOTE dataset**
+```{r}
+rf_prediction <- predict(rf3, test, type = "prob")
+ROC_rf <- roc(test$stroke, rf_prediction[,2])
+ROC_rf_auc <- auc(ROC_rf)
+plot(ROC_rf, col = "green", main = "ROC For Random Forest afterSMOTE")
+
+```
+According to the precision values, model3 is performing best in random forest.\
+When comparing the ROC curve for beforeSMOTE and afterSMOTE models, AUC value is much higher for ROC afterSMOTE model.\
+AUC for beforeSMOTE model: 0.65800\
+AUC for afterSMOTE model: 0.77455\
+
+Although none of them is crossing the threshold of 0.8. but afterSMOTE models are coming out to be very close to the threshhold and much better than beforeSMOTE models.\
+
+## **Final Summary of Random Forest**
+A final summary of each model of random forest for beforeSMOTE and afterSMOTE dataset:\
+
+![Summary of each model](randomForestTable.png)
+
+### **SMART QUESTION 6**
+**Question**: *How are accuracy, precision, recall rate, and specificity affected after applying SMOTE (technique for up sampling/down sampling) technique since our dataset was imbalanced?*\
+From the summary table above, we can see the different accuracy, precision, and recall rate for beforeSMOTE dataset and afterSMOTE dataset.\
+Explained in detail in logistic regression section.\
+
+# **LOGISTIC REGRESSION**
+
+## **Logistic Regression on Original Dataset**
+```{r}
+#before smote training
+logitModel1_b <- glm(stroke~ ., data = beforeSMOTE, family = binomial())
+logitModel2_b <- glm(stroke~ age + age:hypertension + age:heart_disease +age:avg_glucose_level, data = beforeSMOTE, family = binomial())
+logitModel3_b <- glm(stroke~  age*heart_disease +age*glucoseGroup, data = beforeSMOTE, family = binomial())
+logitModel4_b <- glm(stroke~ (age+heart_disease+ avg_glucose_level)^2 , data = beforeSMOTE, family = binomial())
+logitModel5_b <- glm(stroke~ (age + glucoseGroup)^2 , data = beforeSMOTE, family = binomial())
+logitModel6_b <- glm(stroke~ age+age:heart_disease+ age:avg_glucose_level , data = beforeSMOTE, family = binomial())
+#selecting model for further analysis of code
+logitModel_b <-logitModel3_b
+summary(logitModel_b)
+```
+### **SMART QUESTION 1**
+**Question**: *Is there a difference in stroke between individuals with heart disease and hypertension on different age levels?*\
+To answer this SMART question, we tried to try various permutation of heart disease,hypertension and age. For this dataset, we didn't see the significant coefficient for age:hypertension1, age:heart_disease1, hypertension1 and heart_disease1, so hypertension, heart_disease or interaction of hypertension with age, interaction of heart_disease with age, or any other combination with these values will not make a significant impact on explaining stroke.\ 
+
+### **SMART QUESTION 3**
+**Question**: *Is there a difference in stroke between individuals with work types on different age levels?*\
+coefficient of work type or it's interaction with age was not giving significant p value and hence, this won't have a significant impact on explaining stroke.\
+
+R2 and AIC value for the selected model 
+
+```{r results='markup'}
+pR2(logitModel_b)
+AIC(logitModel_b)
+```
+
+After trying multiple interactions terms, based on the AUC and ANOVA test we selected `age*heart_disease +age*glucoseGroup` for Logistic Regression.
+
+
+
+##     **Logistic Regression on Upsampled Dataset**
+```{r results='markup'}
+#after SMOTE training
+logitModel3_a <- glm(stroke~ age*heart_disease +age*glucoseGroup, data = afterSMOTE, family = binomial())
+#selecting model for further analysis of code
+logitModel_a <- logitModel3_a
+summary(logitModel_a)
+```
+
+```{r results='markup'}
+pR2(logitModel_a)
+AIC(logitModel_a)
+```
+
+
+psuedo R2 value has increased a lot on upsampled dataset, because with more number of 1 enteries, more variance of y is explained by the variables. 
+
+## **Training Testing Set Prediction Score Distribution**
+
+Checking the prediction density from the models for both training and testing dataset
+
+Probability density curve before and after SMOTE on testing dataset 
+
+```{r}
+
+beforeSMOTE$prediction <- predict( logitModel_b, newdata = beforeSMOTE, type = "response" )
+test$prediction  <- predict( logitModel_b, newdata = test , type = "response" )
+
+ggp1 <- ggplot( test, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Predicted Score before SMOTE" ) 
+ 
+
+
+testAfterSMOTE <- test
+afterSMOTE$prediction <- predict( logitModel_a, newdata = afterSMOTE, type = "response" )
+testAfterSMOTE$prediction  <- predict( logitModel_a, newdata = test , type = "response" )
+
+ggp2 <- ggplot( testAfterSMOTE, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Predicted Score after SMOTE" ) 
+
+grid.arrange(ggp1, ggp2, ncol = 2)  
+```
+
+Now for before SMOTE the cut-off value is very close to 0. Mostly between 0.0 to 0.025. So the cut off value should be in that range. 
+
+But when we notice after SMOTE, this intersection point is now shifted to 0.25, and there is a hump in a probabilities near 1 because of more 1 values. 
+Here the optimal cut off can be the close to 0.25.
+
+### **SMART QUESTION 4**\
+**Question**: *Since, we would like to predict the probability of getting a stroke, what would be the optimal cutoff value for classification so as to achieve maximum accuracy?*\
+From above plots, the cut off seems to be at 0.025 for before SMOTE. For highly imbalanced problem like ours, we realized that accuracy would not give the accurate picture of the model. So based on precision, sensitivity, f1 score, and majorly probability density curves, we feel the optimal cut off would be at 0.025 when we do not apply SMOTE.\ 
+And if we balance the dataset using SMOTE, the cut off will shift towards 0.25.\ 
+
+## **Confusion Matrix distribution**
+```{r}
+ConfusionMatrixInfo <- function( data, predict, actual, cutoff )
+{	
+	predict <- data[[predict]]
+	actual  <- relevel( as.factor( data[[actual]] ), "1" )
+	
+	result <- data.table( actual = actual, predict = predict )
+	result[ , type := ifelse( predict >= cutoff & actual == 1, "TP",
+					  ifelse( predict >= cutoff & actual == 0, "FP", 
+					  ifelse( predict <  cutoff & actual == 1, "FN", "TN" ) ) ) %>% as.factor() ]
+
+	# jittering : can spread the points along the x axis 
+	plot <- ggplot( result, aes( actual, predict, color = type ) ) + 
+			geom_violin( fill = "white", color = NA ) +
+			geom_jitter( shape = 1 ) + 
+			geom_hline( yintercept = cutoff, color = "blue", alpha = 0.6 ) + 
+			scale_y_continuous( limits = c( 0, 1 ) ) + 
+			scale_color_discrete( breaks = c( "TP", "FN", "FP", "TN" ) ) + # ordering of the legend 
+			guides( col = guide_legend( nrow = 2 ) ) + # adjust the legend to have two rows  
+			ggtitle( sprintf( "ConfusionMatrix Cutoff : %.2f", cutoff ) )
+
+	return( list( data = result, plot = plot ))
+}
+
+```
+
+```{r results='markup'}
+
+# visualize .6 cutoff (lowest point of the previous plot)
+# cm_info <- ConfusionMatrixInfo( data = test, predict = "prediction", 
+#                                 actual = "stroke", cutoff = .08 )
+# #ggthemr("flat")
+# cm_info$plot
+par(mfrow = c(1, 2))
+list1 <- ConfusionMatrixInfo( data = test, predict = "prediction", actual = "stroke", cutoff = .02 )
+list2 <- ConfusionMatrixInfo( data = testAfterSMOTE, predict = "prediction", actual = "stroke", cutoff = .27 )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2)
+
+```
+
+On left we have a Confusion matrix distribution for before SMOTE, as we can notice the points are distributed between 0 to 0.25 because of the majority 0 values. But on the right hand side the data points are well spreaded, if there were more significant variables, we guess the distribution for 0 would be more dense close to 0 and for 1 more dense around 1. Even this is the case here as well, but due to imbalance it's not noticable. \
+\
+The cutoff value that we selected are because of the below curves for(accuracy,sensitivity, precision, f1 score). The plot of confusion metrics is shown first to give a clear idea of the distribution.
+
+
+## **Accuracy Curve**
+```{r results='markup'}
+# ------------------------------------------------------------------------------------------
+# [AccuracyCutoffInfo] : 
+# Obtain the accuracy on the trainining and testing dataset.
+# for cutoff value ranging from .4 to .8 ( with a .05 increase )
+# @train   : your data.table or data.frame type training data ( assumes you have the predicted score in it ).
+# @test    : your data.table or data.frame type testing data
+# @predict : prediction's column name (assumes the same for training and testing set)
+# @actual  : actual results' column name
+# returns  : 1. data : a data.table with three columns.
+#            		   each row indicates the cutoff value and the accuracy for the 
+#            		   train and test set respectively.
+# 			 2. plot : plot that visualizes the data.table
+AccuracyCutoffInfo <- function( train, test, predict, actual )
+{ 
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$overall[["Accuracy"]],
+		 			    test   = cm_test$overall[["Accuracy"]] )
+		return(dt)
+	}) %>% rbindlist()
+
+	# visualize the accuracy of the train and test set for different cutoff value 
+	# accuracy in percentage.
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Accuracy vs Cutoff" )
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+list1 <- AccuracyCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- AccuracyCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+Now if observe the accuracy curve,
+
+* For before SMOTE, accuracy keeps on increasing and reaches a plateau after 0.1 \
+reason : if the model classifies all data points as 0, it would achieve a accuracy of 9793/(9793+202) = 97.9% \
+
+* For After SMOTE, since for training data we have a significant number of 1 , the probability values are distributed well between 0 to 1. and thus with the increase in cutoff. so the drop in accuracy of training dataset with the increase in cutoff is explained by the fact that a significant number of 1's are now wrongly predicted.
+
+* Since testing data is similar, even with the well spreaded values of 0 and 1, even though the density of 1 is more above cutoff, the significantly high number of 0's are overpowering that thing and thus the accuracy keeps on increasing here as well for test dataset.
+
+### **So how should we evaluate our model then?** 
+
+
+The above results confirms that in cases with rare disease or imbalance, **it is not a good idea to look at accuracy values.** 
+So instead of that we will focus more on the parameters that are more medically sound. \
+\
+What do you think can be more important for medical studies? \
+We would be more interested in a model which is more sensitive toward people getting stroke.\ 
+
+### **SMART QUESTION 6**
+**Question**: *How are accuracy, precision, recall rate, and specificity affected after applying SMOTE (technique for up sampling/down sampling) technique since our dataset was imbalanced?*\
+
+The parameters that would consider these things are :
+
+* *Sensitivity* : Percentage of people with stroke who were correctly identified as getting stroke \ 
+
+So that more number of people who are going to get stroke can be made caution and protected \
+
+* *Precision* : the probability that a patient diagnosed as stroke by the classifier got stroke. \
+So for whatever people the model is predicting as will get stroke, how many of them are actually getting it.
+This will make the situation less chaotic among population and make the positive stroke value as more serious.\ 
+\
+Hence, we would be more interested in **Sensitivity and Precision** value.
+Let's observe them for our model.
+
+## **Sensitivity versus cutoff** 
+```{r results='markup'}
+SensitivityCutoffInfo <- function( train, test, predict, actual )
+{
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$byClass[["Sensitivity"]],
+		 			    test   = cm_test$byClass[["Sensitivity"]] )
+		return(dt)
+	}) %>% rbindlist()
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Sensivity vs Cutoff" )+
+	    ylab("Sensitivity")
+
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+list1 <- SensitivityCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- SensitivityCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+So why is the sensitivity value decreasing so rapidly?\
+Left curve - before SMOTE\
+since all the predicted probabilities are between 0 & 0.25.
+after 0 and 0.25, all the datapoints which had stroke = 1, are predicted as 0, the sensitivity is dropping so rapidly. \
+\
+Right Curve - after SMOTE\
+train - since the number of 0 & 1 are more balanced, and the probability values are spreaded well between 0 - 1, the drop in sensitivity value is smooth.\
+\
+test - the datapoints are now well spread between 0 & 1, hence the curve is now smooth \
+
+## **Precision versus cutoff** 
+```{r results='markup'}
+PrecisionCutoffInfo <- function( train, test, predict, actual )
+{
+	cutoff <- seq( .01, .9, by = .05 )
+	accuracy <- lapply( cutoff, function(c)
+	{
+	  data_train <- as.factor( as.numeric( train[[predict]] > c ) )
+		cm_train <- confusionMatrix(data_train, as.factor(train[[actual]]),positive="1" )
+		data_test <- as.factor( as.numeric( test[[predict]] > c ) )
+		cm_test  <- confusionMatrix( data_test, as.factor(test[[actual]]),positive="1" )
+			
+		dt <- data.table( cutoff = c,
+						  train  = cm_train$byClass[["Precision"]],
+		 			    test   = cm_test$byClass[["Precision"]] )
+		return(dt)
+	}) %>% rbindlist()
+	accuracy_long <- gather( accuracy, "data", "accuracy", -1 )
+	
+	plot <- ggplot( accuracy_long, aes( cutoff, accuracy, group = data, color = data ) ) + 
+			geom_line( size = 1 ) + geom_point( size = 3 ) +
+			scale_y_continuous( label = percent ) +
+			ggtitle( "Train/Test Precision vs Cutoff" )+
+	    ylab("Precision")
+
+	return( list( data = accuracy, plot = plot ) )
+}
+```
+
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+list1 <- PrecisionCutoffInfo( train = beforeSMOTE, test = test, predict = "prediction", actual = "stroke" )
+list2<- PrecisionCutoffInfo( train = afterSMOTE, test = testAfterSMOTE, predict = "prediction", actual = "stroke" )
+ggp1 <- list1$plot
+ggp2 <- list2$plot
+grid.arrange(ggp1, ggp2, ncol = 2) 
+```
+Precision is an estimate of how reliable the 1(Stroke) value predicted by model is. \
+so now since after the cut off of 0.25, no value is predicted as 1 by the model, FP = 0, and hence, the value is coming out as TP/TP 1.\
+
+The higher the precision recall score, the higher would be the F1 score, hence a high F1 score means a better model. \
+
+## **F1 Score versus cutoff Confusion Matrix at optimal cutoff**
+
+Before SMOTE
+
+```{r results='markup'}
+c_b <- 0.02
+
+beforeSMOTEpred <- as.factor( as.numeric( test[["prediction"]] > c_b ) )
+cm_test_b <- confusionMatrix(beforeSMOTEpred, as.factor(test$stroke),positive="1" )
+cm_test_b
+
+```
+
+
+* F1 score : `r cm_test_b$byClass[["F1"]]`
+* Sensitivity  : `r cm_test_b$byClass[["Sensitivity"]]`
+* Precision  : `r cm_test_b$byClass[["Precision"]]`
+
+After SMOTE
+```{r results='markup'}
+c_a <- 0.27
+afterSMOTEpred <- as.factor( as.numeric( testAfterSMOTE[["prediction"]] > c_a ) )
+cm_test_a <- confusionMatrix(afterSMOTEpred, as.factor(testAfterSMOTE$stroke),positive="1" )
+cm_test_a
+```
+
+* F1 score : `r cm_test_a$byClass[["F1"]]` 
+* Sensitivity  : `r cm_test_a$byClass[["Sensitivity"]]`
+* Precision  : `r cm_test_a$byClass[["Precision"]]`
+
+
+## **ROC - AUC Curve** 
+
+### **For Unbalanced Dataset**
+```{r, figures-side, fig.show="hold", out.width="50%"}
+# loading the package
+
+
+prob=predict(logitModel_b,test, type = "response")
+h <- roc(stroke~prob, data=test,levels = c(1, 0))
+auc(h) # area-under-curve prefer 0.8 or higher.
+par(mfrow = c(1, 2))
+#ggp1<-plot(h,main="ROC-plot Before SMOTE")
+
+prob=predict(logitModel_a,testAfterSMOTE, type = "response")
+#Admit$prob=prob
+h_logistic <- roc(stroke~prob, data=testAfterSMOTE)
+auc(h_logistic) # area-under-curve prefer 0.8 or higher.
+#ggp2<-plot(h_logistic,main="ROC-plot After SMOTE")
+
+par(mfrow = c(1, 2))
+ggp1<-plot(h,main="ROC-plot Before SMOTE")
+ggp2<-plot(h_logistic,main="ROC-plot After SMOTE")
+par(mfrow = c(1, 1)) #reset this parameter
+
+#grid.arrange(grobs=list(ggp1, ggp2), ncol = 2) 
+
+```
+
+* Before SMOTE : AUC = 0.8147
+* After SMOTE : AUC = 0.809
+
+Now why is there no significant difference in the ROC curve value ?\
+This is because the testing dataset is same for both and the number of values for 1 are significantly small.\ 
+
+
+## **PR Curve**
+Always a good idea to plot a precision recall curve when we are more interested in one class out of the two.
+Our aim is to make the curve as close to (1, 1) as possible- meaning a good precision and recall
+
+```{r results='markup'}
+
+# Predict
+pred = predict(logitModel_b,test, type = "response")
+# Store precision and recall scores at different cutoffs
+par(mfrow = c(1, 2))
+library(ROCR)
+predobj <- prediction(pred, test$stroke)
+perf <- performance(predobj,"prec", "rec")
+ggp1<- plot(perf,main="PR Curve- BeforeSMOTE")
+
+#Predict
+pred = predict(logitModel_a,testAfterSMOTE, type = "response")
+predobj <- prediction(pred, testAfterSMOTE$stroke)
+perf <- performance(predobj,"prec", "rec")
+ggp2<-plot(perf,main="PR Curve- After SMOTE")
+
+
+grid.arrange(ggp1, ggp2, ncol = 2) 
+
+```
+
+## **SOLUTION**
+
+Our results will improve if we generate more entries in test dataset, so we have more entries that could describe stroke = 1.\
+
+
+```{r results='markup'}
+
+testDataAfterSmote <- SMOTE(stroke ~ ., test, perc.over = 2000, perc.under = 100)
+test_0 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==0)
+test_1 <- subset(testDataAfterSmote,testDataAfterSmote$stroke==1)
+
+testDataAfterSmote$glucoseGroup=cut(testDataAfterSmote$avg_glucose_level, c(0, 114, 140, Inf), c("Normal", "Prediabetes", "Diabetes"), include.lowest=TRUE)
+```
+
+
+```{r results='markup'}
+par(mfrow = c(1, 2))
+# Predict
+pred = predict(logitModel_a,testDataAfterSmote, type = "response")
+# Store precision and recall scores at different cutoffs
+library(ROCR)
+predobj <- prediction(pred, testDataAfterSmote$stroke)
+perf <- performance(predobj,"prec", "rec")
+#ggp1<-plot(perf,main="PR curve -- test Data After SMOTE")
+
+
+#prob=predict(logitModel_a,testAfterSMOTE, type = "response")
+#Admit$prob=prob
+h <- roc(stroke~pred, data=testDataAfterSmote)
+auc(h) # area-under-curve prefer 0.8 or higher.
+
+#ggp2<-plot(h,main="ROC curve -- test Data After SMOTE")
+
+par(mfrow = c(1, 2))
+ggp1<-plot(perf,main="PR curve -- test Data After SMOTE")
+ggp2<-plot(h,main="ROC curve -- test Data After SMOTE")
+par(mfrow = c(1, 1)) #reset this parameter
+
+#grid.arrange(ggp1, ggp2, ncol = 2) 
+
+```
+
+Significant improvement in both the curves 
+Here we can observe the improvement in ROC, AUC=0.88 and PR curve.\
+pr curve being close to (1,1) means a high sensitivity and high recall.
+Since we have significant number of 0 and 1 values.
+
+```{r results='markup'}
+testDataAfterSmote$prediction = predict(logitModel_a,testDataAfterSmote, type = "response")
+ggplot( testDataAfterSmote, aes( prediction, color = as.factor(stroke) ) ) + 
+geom_density( size = 1 ) +
+ggtitle( "Testing Set's Predicted Score after SMOTE" ) 
+
+```
+
+Conclusion : 
+
+* we cannot upsample more datapoints in medical dataset so we will need to ask for more entries with the disease(stroke=1)
+* or more significant terms for the model, which have a huge impact on the disease itself.
+
+
+# **PLOTTING ALL THE THREE MODELS**
+```{r, results='markup'}
+plot(ROC_rf, col = "green", main = "ROC For all the three models")
+plot(h_KNN, add=TRUE, col="red")
+plot(h_logistic, add=TRUE, col='blue')
+legend(0.3,0.4,legend=c("Random Forest", "Logistic Regression","KNN" ),
+       fill = c("green","blue", "red"))
+```
+
+So, for our dataset, logistic regression gives the best results.\
+
+## **SMART QUESTION 5**
+**Question**: *How are accuracies different if different machine learning models are applied like KNN, logistic regression, and random forest?*\
+Since accuracy is not the correct measure for our dataset which highly imbalanced. We are more interested in area under curve or AUC value of different models. So, from the plot above, logistic regression works best for our model with the highest AUC value of 0.81.
+
+# **GITHUB ACTIVITY**
+![](github.png)
+
+
+
+
+
