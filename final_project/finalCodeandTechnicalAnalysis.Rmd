@@ -159,7 +159,7 @@ split1.testLabels <- test[, 11]
 
 
 
-* We have separated the x variables from our response variable (`stroke`), but before we sparated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
+* We have separated the x variables from our response variable (`stroke`), but before we separated them, we created a train-test split in a ratio of `7:3` (i.e. 70% training, 30% testing).
 
 
 ##KNN for Before SMOTE
@@ -577,11 +577,11 @@ AIC(logitModel_a)
 
 Here with the upsampled datset the psuedo R2 value has increased a lot which is because with more data points of 1, a lot more variance in y is explained by the variables now. 
 
-### Training Testing Set Prediction Score Distribution
+## Training Testing Set Prediction Score Distribution
 
 Checking the prediction density from the models for both training and testing dataset
 
-####Before SMOTE
+### Before SMOTE
 ```{r results='markup'}
 
 beforeSMOTE$prediction <- predict( logitModel_b, newdata = beforeSMOTE, type = "response" )
